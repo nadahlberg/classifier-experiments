@@ -41,6 +41,6 @@ secrets outcome (configure).
   - [x] chat-demo
   - [x] admin-codebase-tab
   - [x] layout-demos
-- [ ] 6. Finalize
+- [x] 6. Finalize
 - [ ] 7. Configure the repo
 - [ ] 8. Publish

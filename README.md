@@ -38,40 +38,6 @@ mypy clx
 ```
 
 
-## Start a new project
-
-Two starting points, both requiring `gh` authenticated with access to
-this repo. Either way, then run `claude` and invoke
-`/initialize-project`. The skill interviews you up front for every
-decision, then renames everything, boots the stack, strips the
-features you dropped, sets up the GitHub repo, and lands the result as
-its first pull request. None of the code reaches GitHub until that
-final stage.
-
-Both commands record this repo's revision and origin in a
-`.template-rev` marker before destroying the clone's `.git`. That is
-the fork point the sync-codebase skill syncs from later; initialization
-folds it into that skill's ledger and deletes the marker.
-
-**From scratch** — take a copy with no history and no remote:
-
-```sh
-gh repo clone nadahlberg/clx myapp -- --depth 1 && cd myapp && git rev-parse HEAD > .template-rev && git remote get-url origin >> .template-rev && rm -rf .git && git init -b main
-```
-
-**On top of an existing repo** — first move everything at the root
-into a `references/` folder and commit, so the root holds nothing
-else. Structure `references/` however you like: the old code, a
-mocked-up page with the branding to match, anything worth keeping at
-hand — every tool here ignores it, and folding what it holds into the
-new structure is its own later project. Then, from the repo root, copy
-the template in:
-
-```sh
-gh repo clone nadahlberg/clx /tmp/clx-copy -- --depth 1 && git -C /tmp/clx-copy rev-parse HEAD > /tmp/clx-copy/.template-rev && git -C /tmp/clx-copy remote get-url origin >> /tmp/clx-copy/.template-rev && rm -rf /tmp/clx-copy/.git && cp -R /tmp/clx-copy/. . && rm -rf /tmp/clx-copy
-```
-
-
 ## Environment
 
 Set these as repository secrets, under Settings → Secrets and variables → Actions.

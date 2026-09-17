@@ -10,7 +10,7 @@ version = "0.0.1"
 requires-python = ">=3.13"
 readme = "README.md"
 
-urls.Repository = "https://github.com/nadahlberg/clx"
+urls.Repository = "https://github.com/nadahlberg/classifier-experiments"
 urls."Organisation Homepage" = "https://nates.ai/"
 
 dependencies = [
