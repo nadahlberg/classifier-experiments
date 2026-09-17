@@ -1,0 +1,152 @@
+name: clx
+
+services:
+  postgres:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: clx
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres", "-d", "clx"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
+  django:
+    build:
+      context: .
+      dockerfile: docker/django/Dockerfile
+    restart: unless-stopped
+    command: >
+      sh -c "manage migrate --noinput
+      && uvicorn clx.main:application --host 0.0.0.0 --port 8000 --reload"
+    environment:
+      DEBUG: "on"
+      ALLOWED_HOSTS: localhost,127.0.0.1
+      POSTGRES_HOST: postgres
+      POSTGRES_PASSWORD: postgres
+      REDIS_URL: redis://redis:6379
+      ELASTICSEARCH_URL: http://elasticsearch:9200
+      SECRET_KEY: ${SECRET_KEY:-dev}
+      SENTRY_DSN: ${SENTRY_DSN:-}
+      DEV_USER_EMAIL: ${DEV_USER_EMAIL:-dev@example.com}
+      DEV_USER_PASSWORD: ${DEV_USER_PASSWORD:-dev}
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request; urllib.request.urlopen("http://localhost:8000/api/health/?services=postgres,redis,elasticsearch,public_storage,private_storage")
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  tailwind:
+    build:
+      context: .
+      dockerfile: docker/django/Dockerfile
+    restart: unless-stopped
+    command: >
+      tailwindcss
+      --input clx/app/src/main.css
+      --output clx/app/static/main.css
+      --watch=always
+    volumes:
+      - .:/app
+
+  scripts:
+    build:
+      context: .
+      dockerfile: docker/django/Dockerfile
+    restart: unless-stopped
+    command: manage collectscripts --watch
+    volumes:
+      - .:/app
+
+  celery:
+    build:
+      context: .
+      dockerfile: docker/django/Dockerfile
+    restart: unless-stopped
+    command: celery -A clx worker -l info
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PASSWORD: postgres
+      REDIS_URL: redis://redis:6379
+      ELASTICSEARCH_URL: http://elasticsearch:9200
+    volumes:
+      - .:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  celery-beat:
+    build:
+      context: .
+      dockerfile: docker/django/Dockerfile
+    restart: unless-stopped
+    command: celery -A clx beat -l info -s /tmp/celerybeat-schedule
+    environment:
+      REDIS_URL: redis://redis:6379
+    volumes:
+      - .:/app
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  redis:
+    image: redis:7
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  elasticsearch:
+    image: elasticsearch:9.5.1
+    restart: unless-stopped
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+    ports:
+      - "127.0.0.1:9200:9200"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - -sf
+        - http://localhost:9200/_cluster/health?wait_for_status=yellow&timeout=5s
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+
+volumes:
+  postgres_data:
+  elasticsearch_data:

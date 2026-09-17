@@ -1,0 +1,54 @@
+name: deploy
+
+on:
+  workflow_run:
+    workflows: [ci]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy
+
+jobs:
+  infra:
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && contains(fromJSON('["on", "true", "1", "yes"]'), vars.AUTODEPLOY)) }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require deploy secrets
+        env:
+          DIGITALOCEAN_TOKEN: ${{ secrets.DIGITALOCEAN_TOKEN }}
+          DIGITALOCEAN_PROJECT_NAME: ${{ secrets.DIGITALOCEAN_PROJECT_NAME }}
+          DIGITALOCEAN_REGISTRY_NAME: ${{ secrets.DIGITALOCEAN_REGISTRY_NAME }}
+        run: |
+          set -euo pipefail
+          missing=""
+          for name in DIGITALOCEAN_TOKEN DIGITALOCEAN_PROJECT_NAME DIGITALOCEAN_REGISTRY_NAME; do
+            [ -n "${!name}" ] || missing="$missing $name"
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::Missing repository secrets:$missing"
+            exit 1
+          fi
+
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - uses: astral-sh/setup-uv@v10.0.1
+
+      - uses: pulumi/actions@v7
+        with:
+          command: up
+          stack-name: prod
+          work-dir: infra
+          upsert: true
+        env:
+          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+          DIGITALOCEAN_TOKEN: ${{ secrets.DIGITALOCEAN_TOKEN }}
+          DIGITALOCEAN_PROJECT_NAME: ${{ secrets.DIGITALOCEAN_PROJECT_NAME }}
+          DIGITALOCEAN_REGISTRY_NAME: ${{ secrets.DIGITALOCEAN_REGISTRY_NAME }}
+          DIGITALOCEAN_REGISTRY_TIER: ${{ secrets.DIGITALOCEAN_REGISTRY_TIER }}
+          DOMAIN: ${{ secrets.DOMAIN }}
+          IMAGE_TAG: ${{ github.event.workflow_run.head_sha || github.sha }}
+          ALL_SECRETS: ${{ toJSON(secrets) }}

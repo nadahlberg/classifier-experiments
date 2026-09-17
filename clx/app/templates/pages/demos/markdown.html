@@ -1,0 +1,70 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Markdown demo{% endblock %}
+
+{% block nav %}<c-nav />{% endblock %}
+
+{% block content %}
+<div x-data="markdownEditor" @input="edit" class="mx-auto w-full max-w-shell flex-1 px-4 py-10 sm:px-6">
+  <h1 class="font-display text-2xl font-semibold tracking-tight text-foreground">Markdown</h1>
+  <p class="mt-1.5 text-sm text-muted-foreground">Type on the left, rendered on the right. The editor grows with the text instead of scrolling.</p>
+
+  <div class="mt-8 grid items-start gap-4 lg:grid-cols-2">
+    <section class="overflow-hidden rounded-surface border border-border bg-surface shadow-card">
+      <header class="border-b border-border px-5 py-3">
+        <p class="text-xs font-medium uppercase tracking-wide text-muted-foreground">Source</p>
+      </header>
+      <div class="p-5">
+        <c-textarea name="source" spellcheck="false" class="font-mono">
+# Lorem ipsum
+
+Dolor **sit amet**, consectetur *adipiscing* elit, sed do eiusmod tempor
+incididunt ut `labore` et dolore magna aliqua. Ut enim ad [minim veniam](https://example.com),
+quis nostrud exercitation.
+
+## Ut enim ad minim
+
+- Duis aute irure dolor in reprehenderit
+- Excepteur sint occaecat cupidatat non proident
+  - Sunt in culpa qui officia
+  - Deserunt mollit anim id est laborum
+- Nemo enim ipsam voluptatem ~~quia voluptas~~
+
+1. Sed ut perspiciatis unde omnis
+2. Iste natus error sit voluptatem
+3. Accusantium doloremque laudantium
+
+> Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet.
+
+### Totam rem aperiam
+
+```python
+def voluptatem(sequi: str) -> str:
+    """Nesciunt neque porro quisquam est."""
+    return sequi.upper()
+```
+
+| Ratione | Sequi | Nesciunt |
+| --- | --- | --- |
+| Magnam | Dolores | 42 |
+| Eius | Modi | 7 |
+
+---
+
+Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam
+nihil molestiae consequatur.
+</c-textarea>
+      </div>
+    </section>
+
+    <section class="overflow-hidden rounded-surface border border-border bg-surface shadow-card">
+      <header class="border-b border-border px-5 py-3">
+        <p class="text-xs font-medium uppercase tracking-wide text-muted-foreground">Preview</p>
+      </header>
+      <div class="p-5">
+        <c-markdown ids />
+      </div>
+    </section>
+  </div>
+</div>
+{% endblock %}

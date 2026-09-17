@@ -1,0 +1,5 @@
+<c-vars color="neutral" />
+
+<span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium
+  {% if color == 'success' %}bg-success-soft text-success-soft-foreground{% elif color == 'warning' %}bg-warning-soft text-warning-soft-foreground{% elif color == 'danger' %}bg-danger-soft text-danger-soft-foreground{% elif color == 'info' %}bg-info-soft text-info-soft-foreground{% else %}bg-accent text-accent-foreground{% endif %}"
+>{{ slot }}</span>

@@ -1,0 +1,9 @@
+{% extends "layouts/base.html" %}
+
+{% block nav %}<c-nav variant="bare" />{% endblock %}
+
+{% block content %}
+<div class="flex flex-1 items-center justify-center px-4 py-16">
+  {% block card %}{% endblock %}
+</div>
+{% endblock %}

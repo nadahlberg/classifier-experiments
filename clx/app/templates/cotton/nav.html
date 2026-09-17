@@ -1,0 +1,60 @@
+<c-vars variant="dashboard" />
+
+<nav class="fixed inset-x-0 top-0 z-40 px-4 sm:px-6 {% if variant != 'bare' %}border-b border-border bg-surface{% endif %} {% if variant == 'marketing' %}shadow-xs{% endif %}">
+  <div class="mx-auto flex h-nav items-center justify-between {% if variant != 'dashboard' %}max-w-shell{% endif %}">
+    <div class="flex items-center gap-6">
+      <c-brand />
+      {% if variant == 'dashboard' and user.is_authenticated %}
+        <a
+          href="{% url 'demos' %}"
+          {% if request.resolver_match.url_name == 'demos' %}aria-current="page"{% endif %}
+          class="text-sm transition {% if request.resolver_match.url_name == 'demos' %}font-medium text-foreground{% else %}text-muted-foreground hover:text-foreground{% endif %}"
+        >Demos</a>
+      {% endif %}
+    </div>
+    {% if variant == 'marketing' %}
+      <a href="{% url 'demos' %}" class="btn">Get started</a>
+    {% elif variant != 'bare' %}
+      {% if user.is_authenticated %}
+        <div x-data="dropdown" class="relative">
+          <button type="button" @click="toggle" @keydown.escape.window="close" class="group flex items-center gap-2 rounded-full border-border transition sm:border sm:p-1 sm:pr-3 sm:hover:bg-accent">
+            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-medium uppercase text-primary-foreground transition group-hover:bg-primary-hover sm:h-7 sm:w-7 sm:text-xs">{{ user.email|first }}</span>
+            <span class="hidden max-w-40 truncate text-sm text-accent-foreground sm:block">{{ user.email }}</span>
+          </button>
+          <div x-show="open" x-cloak @click.outside="close" class="absolute right-0 mt-1 min-w-full rounded-control border border-border bg-surface p-1">
+            <a href="{% url 'profile' %}" class="group flex items-center gap-2.5 whitespace-nowrap rounded-md px-3 py-2 text-sm text-accent-foreground transition hover:bg-accent">
+              <svg class="h-4 w-4 shrink-0 text-muted-foreground transition group-hover:text-accent-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+              Profile
+            </a>
+            {% if perms.app.manage_admin %}
+              <a href="{% url 'admin' %}" class="group flex items-center gap-2.5 whitespace-nowrap rounded-md px-3 py-2 text-sm text-accent-foreground transition hover:bg-accent">
+                <svg class="h-4 w-4 shrink-0 text-muted-foreground transition group-hover:text-accent-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                </svg>
+                Admin
+              </a>
+            {% endif %}
+            <div class="my-1 h-px bg-border/60"></div>
+            <form method="post" action="{% url 'account_logout' %}">
+              {% csrf_token %}
+              <button type="submit" class="group flex w-full items-center gap-2.5 whitespace-nowrap rounded-md px-3 py-2 text-left text-sm text-accent-foreground transition hover:bg-accent">
+                <svg class="h-4 w-4 shrink-0 text-muted-foreground transition group-hover:text-accent-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                  <path d="M16 17l5-5-5-5" />
+                  <path d="M21 12H9" />
+                </svg>
+                Sign out
+              </button>
+            </form>
+          </div>
+        </div>
+      {% else %}
+        <a href="{% url 'account_login' %}" class="btn">Sign in</a>
+      {% endif %}
+    {% endif %}
+  </div>
+</nav>
+{% if variant != 'bare' %}<div class="h-nav shrink-0"></div>{% endif %}

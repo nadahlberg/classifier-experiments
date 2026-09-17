@@ -1,0 +1,218 @@
+<c-vars class="" ids="" />
+
+<div x-data="markdown" data-ids="{{ ids|yesno:'true,false' }}" x-html="rendered" {{ attrs }} class="content {{ class }}"></div>
+
+{% script %}
+<script>
+  const MARKDOWN_ITEM = /^(\s*)([-*+]|\d+[.)])\s+(.*)$/;
+  const MARKDOWN_FENCE = /^\s*```(\S*)\s*$/;
+  const MARKDOWN_RULE = /^\s*(?:-{3,}|\*{3,}|_{3,})\s*$/;
+  const MARKDOWN_HEADING = /^\s*(#{1,6})\s+(.*?)\s*#*\s*$/;
+  const MARKDOWN_QUOTE = /^\s{0,3}>\s?/;
+  const MARKDOWN_ROW = /^\s*\|?[\s:|-]*-[\s:|-]*\|[\s:|-]*$/;
+
+  let markdownSlugs = {};
+  let markdownIds = false;
+
+  function markdownSlug(text) {
+    const base =
+      text
+        .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
+        .replace(/[`*_~]/g, "")
+        .toLowerCase()
+        .replace(/[^\w\s-]/g, "")
+        .trim()
+        .replace(/\s+/g, "-") || "section";
+    markdownSlugs[base] = (markdownSlugs[base] || 0) + 1;
+    const seen = markdownSlugs[base];
+    return seen > 1 ? base + "-" + seen : base;
+  }
+
+  function markdownEscape(text) {
+    return text
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function markdownInline(text) {
+    const codes = [];
+    return markdownEscape(text)
+      .replace(/`([^`]+)`/g, (match, code) => {
+        codes.push(code);
+        return "\u0000" + (codes.length - 1) + "\u0000";
+      })
+      .replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, '<a href="$2">$1</a>')
+      .replace(/\*\*(?=\S)([\s\S]*?\S)\*\*/g, "<strong>$1</strong>")
+      .replace(/(^|\W)__(?=\S)([\s\S]*?\S)__(?!\w)/g, "$1<strong>$2</strong>")
+      .replace(/\*(?=\S)([^*]*?\S)\*/g, "<em>$1</em>")
+      .replace(/(^|\W)_(?=\S)([^_]*?\S)_(?!\w)/g, "$1<em>$2</em>")
+      .replace(/~~(?=\S)([\s\S]*?\S)~~/g, "<del>$1</del>")
+      .replace(/\u0000(\d+)\u0000/g, (match, index) => {
+        return "<code>" + codes[index] + "</code>";
+      });
+  }
+
+  function markdownCells(row) {
+    return row
+      .trim()
+      .replace(/^\|/, "")
+      .replace(/\|$/, "")
+      .split("|")
+      .map((cell) => markdownInline(cell.trim()));
+  }
+
+  function markdownList(lines, start, indent) {
+    const ordered = /\d/.test(MARKDOWN_ITEM.exec(lines[start])[2]);
+    const items = [];
+    let i = start;
+
+    while (i < lines.length) {
+      const item = MARKDOWN_ITEM.exec(lines[i]);
+      if (!item) break;
+      if (item[1].length !== indent) break;
+      if (/\d/.test(item[2]) !== ordered) break;
+
+      const body = [];
+      i += 1;
+      while (i < lines.length && lines[i].trim() && lines[i].search(/\S/) > indent) {
+        body.push(lines[i].slice(Math.min(lines[i].search(/\S/), indent + 2)));
+        i += 1;
+      }
+      const nested = body.length ? markdownBlocks(body) : "";
+      items.push("<li>" + markdownInline(item[3]) + nested + "</li>");
+    }
+
+    const tag = ordered ? "ol" : "ul";
+    return [`<${tag}>${items.join("")}</${tag}>`, i];
+  }
+
+  function markdownBlocks(lines) {
+    const html = [];
+    let paragraph = [];
+    let i = 0;
+
+    const flush = () => {
+      if (!paragraph.length) return;
+      const text = markdownInline(paragraph.join("\n")).replace(/\n/g, "<br>");
+      html.push("<p>" + text + "</p>");
+      paragraph = [];
+    };
+
+    while (i < lines.length) {
+      const line = lines[i];
+
+      const fence = MARKDOWN_FENCE.exec(line);
+      if (fence) {
+        flush();
+        const body = [];
+        i += 1;
+        while (i < lines.length && !MARKDOWN_FENCE.test(lines[i])) {
+          body.push(lines[i]);
+          i += 1;
+        }
+        i += 1;
+        const language = fence[1].replace(/[^\w-]/g, "");
+        const attribute = language ? ` class="language-${language}"` : "";
+        const code = markdownEscape(body.join("\n"));
+        html.push(`<pre><code${attribute}>${code}</code></pre>`);
+        continue;
+      }
+
+      if (!line.trim()) {
+        flush();
+        i += 1;
+        continue;
+      }
+
+      if (MARKDOWN_RULE.test(line)) {
+        flush();
+        html.push("<hr>");
+        i += 1;
+        continue;
+      }
+
+      const heading = MARKDOWN_HEADING.exec(line);
+      if (heading) {
+        flush();
+        const level = heading[1].length;
+        const id = markdownIds ? ` id="${markdownSlug(heading[2])}"` : "";
+        const text = markdownInline(heading[2]);
+        html.push(`<h${level}${id}>${text}</h${level}>`);
+        i += 1;
+        continue;
+      }
+
+      if (MARKDOWN_QUOTE.test(line)) {
+        flush();
+        const body = [];
+        while (i < lines.length && MARKDOWN_QUOTE.test(lines[i])) {
+          body.push(lines[i].replace(MARKDOWN_QUOTE, ""));
+          i += 1;
+        }
+        html.push("<blockquote>" + markdownBlocks(body) + "</blockquote>");
+        continue;
+      }
+
+      if (line.includes("|") && i + 1 < lines.length && MARKDOWN_ROW.test(lines[i + 1])) {
+        flush();
+        const head = markdownCells(line);
+        const rows = [];
+        i += 2;
+        while (i < lines.length && lines[i].includes("|") && lines[i].trim()) {
+          rows.push(markdownCells(lines[i]));
+          i += 1;
+        }
+        const cell = (tag, values) => {
+          return values.map((value) => `<${tag}>${value}</${tag}>`).join("");
+        };
+        const body = rows.map((row) => "<tr>" + cell("td", row) + "</tr>");
+        html.push(
+          "<table><thead><tr>" +
+            cell("th", head) +
+            "</tr></thead><tbody>" +
+            body.join("") +
+            "</tbody></table>",
+        );
+        continue;
+      }
+
+      const item = MARKDOWN_ITEM.exec(line);
+      if (item) {
+        flush();
+        const [list, next] = markdownList(lines, i, item[1].length);
+        html.push(list);
+        i = next;
+        continue;
+      }
+
+      paragraph.push(line);
+      i += 1;
+    }
+
+    flush();
+    return html.join("");
+  }
+
+  function markdownRender(source, ids = false) {
+    markdownSlugs = {};
+    markdownIds = ids;
+    return markdownBlocks(String(source).replace(/\r\n?/g, "\n").split("\n"));
+  }
+
+  document.addEventListener("alpine:init", () => {
+    Alpine.data("markdown", () => ({
+      ids: false,
+      init() { this.ids = this.$el.dataset.ids === "true"; },
+      get rendered() { return markdownRender(this.source || "", this.ids); },
+    }));
+
+    Alpine.data("markdownEditor", () => ({
+      source: "",
+      init() { this.source = this.$el.querySelector("textarea").value; },
+      edit(evt) { this.source = evt.target.value; },
+    }));
+  });
+</script>
+{% endscript %}

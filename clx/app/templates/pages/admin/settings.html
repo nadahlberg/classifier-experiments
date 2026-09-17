@@ -1,0 +1,65 @@
+{% extends "layouts/three_panel.html" %}
+
+{% block title %}Settings · Admin{% endblock %}
+
+{% block left %}<c-admin.tabs />{% endblock %}
+
+{% block toolbar %}
+<p class="min-w-0 truncate text-sm font-medium text-foreground">Settings</p>
+{% endblock %}
+
+{% block right_toggle %}{% endblock %}
+{% block right_panel %}{% endblock %}
+
+{% block center %}
+<div class="lg:pr-80">
+<div class="mx-auto w-full max-w-md py-2">
+  <h2 class="text-base font-semibold text-foreground">Site settings</h2>
+  <p class="mt-1 text-sm text-muted-foreground">Edit the global site configuration options.</p>
+  <form x-data="adminSettingsForm" data-save-url="{% url 'admin-settings-update' %}" @submit.prevent="save" class="mt-8 space-y-5">
+    {% csrf_token %}
+    <c-field label="Site name" name="site_name" value="{{ site_config.site_name }}" help="The page title, the footer copyright, and the PWA manifest." />
+    <p x-show="message" x-cloak class="text-sm text-danger" x-text="message"></p>
+    <div>
+      <button type="submit" class="btn" :disabled="saving">
+        <span x-show="idle">Save</span>
+        <span x-show="saving" x-cloak>Saving…</span>
+        <span x-show="saved" x-cloak>Saved</span>
+      </button>
+    </div>
+  </form>
+</div>
+</div>
+{% endblock %}
+
+{% script %}
+<script>
+  document.addEventListener("alpine:init", () => {
+    Alpine.data("adminSettingsForm", () => ({
+      status: "idle",
+      message: "",
+      saveUrl: "",
+      get idle() { return this.status === "idle"; },
+      get saving() { return this.status === "saving"; },
+      get saved() { return this.status === "saved"; },
+      init() { this.saveUrl = this.$el.dataset.saveUrl; },
+      async save(evt) {
+        this.status = "saving";
+        this.message = "";
+        const data = new FormData(evt.target);
+        try {
+          await api(this.saveUrl, {
+            method: "POST",
+            body: { site_name: data.get("site_name") },
+          });
+          this.status = "saved";
+          setTimeout(() => (this.status = "idle"), 1500);
+        } catch (error) {
+          this.message = error.message;
+          this.status = "idle";
+        }
+      },
+    }));
+  });
+</script>
+{% endscript %}

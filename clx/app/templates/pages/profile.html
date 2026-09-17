@@ -1,0 +1,107 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Profile{% endblock %}
+
+{% block nav %}<c-nav />{% endblock %}
+
+{% block content %}
+<div class="flex flex-1 items-start justify-center px-4 py-16">
+  <div class="w-full max-w-md">
+    <h1 class="text-2xl font-semibold tracking-tight">Profile</h1>
+    <p class="mt-1 text-sm text-muted-foreground">Basic details for your account.</p>
+    <form x-data="profileForm" data-save-url="{% url 'users-me' %}" @submit.prevent="save" class="mt-6 space-y-5">
+      {% csrf_token %}
+      <div class="space-y-1.5">
+        <p class="text-sm font-medium text-accent-foreground">Email</p>
+        <p class="text-sm text-foreground">{{ user.email }}</p>
+      </div>
+      <c-field label="First name" name="first_name" value="{{ user.first_name }}" />
+      <c-field label="Last name" name="last_name" value="{{ user.last_name }}" />
+      <p x-show="message" x-cloak class="text-sm text-danger" x-text="message"></p>
+      <button type="submit" class="btn" :disabled="saving">
+        <span x-show="idle">Save</span>
+        <span x-show="saving" x-cloak>Saving…</span>
+        <span x-show="saved" x-cloak>Saved</span>
+      </button>
+    </form>
+
+    <div x-data="accountDelete" data-delete-url="{% url 'users-me-delete' %}" data-redirect-url="{% url 'index' %}" class="mt-8 border-t border-border pt-6">
+      <p class="text-sm font-medium text-foreground">Danger zone</p>
+      <p class="mt-1 text-sm leading-6 text-muted-foreground">Deleting your account permanently removes your data and every file you have uploaded.</p>
+      <p x-show="error" x-cloak class="mt-2 text-sm text-danger" x-text="error"></p>
+      <div class="mt-4">
+        <c-modal title="Delete account?" size="sm" confirm="{{ user.email }}">
+          <c-slot name="trigger"><c-button variant="danger">Delete account</c-button></c-slot>
+          This permanently deletes your account, your demo jobs, and every
+          file you have uploaded. There is no undo.
+          <c-slot name="footer">
+            <c-button variant="outline" @click="close">Cancel</c-button>
+            <c-button variant="danger" x-bind:disabled="blocked" @click="destroy">
+              <span x-text="deleteLabel"></span>
+            </c-button>
+          </c-slot>
+        </c-modal>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% script %}
+<script>
+  document.addEventListener("alpine:init", () => {
+    Alpine.data("profileForm", () => ({
+      status: "idle",
+      message: "",
+      saveUrl: "",
+      get idle() { return this.status === "idle"; },
+      get saving() { return this.status === "saving"; },
+      get saved() { return this.status === "saved"; },
+      init() { this.saveUrl = this.$el.dataset.saveUrl; },
+      async save(evt) {
+        this.status = "saving";
+        this.message = "";
+        const data = new FormData(evt.target);
+        try {
+          await api(this.saveUrl, {
+            method: "POST",
+            body: {
+              first_name: data.get("first_name"),
+              last_name: data.get("last_name"),
+            },
+          });
+          this.status = "saved";
+          setTimeout(() => (this.status = "idle"), 1500);
+        } catch (error) {
+          this.message = error.message;
+          this.status = "idle";
+        }
+      },
+    }));
+    Alpine.data("accountDelete", () => ({
+      busy: false,
+      error: "",
+      deleteUrl: "",
+      redirectUrl: "",
+      get deleteLabel() { return this.busy ? "Deleting…" : "Delete account"; },
+      init() {
+        this.deleteUrl = this.$el.dataset.deleteUrl;
+        this.redirectUrl = this.$el.dataset.redirectUrl;
+      },
+      async destroy() {
+        if (this.busy) return;
+        this.busy = true;
+        this.error = "";
+        try {
+          await api(this.deleteUrl, { method: "POST" });
+          window.location.href = this.redirectUrl;
+          return;
+        } catch (error) {
+          this.error = error.message;
+        }
+        this.busy = false;
+      },
+    }));
+  });
+</script>
+{% endscript %}

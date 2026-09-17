@@ -1,0 +1,279 @@
+{% extends "layouts/three_panel.html" %}
+
+{% block title %}Users · Admin{% endblock %}
+
+{% block left %}<c-admin.tabs />{% endblock %}
+
+{% block toolbar %}
+<p class="min-w-0 truncate text-sm font-medium text-foreground">Users</p>
+{% endblock %}
+
+{% block right_toggle_label %}Toggle permissions{% endblock %}
+{% block right_toggle_icon %}
+<span class="flex items-center gap-1.5 px-1 text-xs font-medium">
+  <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+  </svg>
+  Permissions
+</span>
+{% endblock %}
+
+{% block center %}
+<div
+  x-data="adminUsers"
+  data-list-url="{% url 'admin-user-list' %}"
+  data-level-url="{% url 'admin-user-level' %}"
+  class="mx-auto w-full max-w-3xl py-2"
+>
+  {% csrf_token %}
+  <div class="flex gap-2">
+    <div class="relative min-w-0 flex-1">
+      <svg class="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="7" />
+        <path d="m21 21-4.3-4.3" />
+      </svg>
+      <input type="text" placeholder="Search by email…" @input="search" class="pl-10" aria-label="Search users by email">
+    </div>
+    <div class="relative shrink-0">
+      <select @change="filterLevel" aria-label="Filter by permission level" class="h-full appearance-none rounded-control border border-border-strong bg-surface py-2.5 pl-3 pr-9 text-sm text-foreground outline-none transition focus:border-ring focus:ring-1 focus:ring-ring">
+        <option value="">All levels</option>
+        <option value="basic">Basic</option>
+        <option value="admin">Admin</option>
+        <option value="developer">Developer</option>
+      </select>
+      <svg class="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="m6 9 6 6 6-6" />
+      </svg>
+    </div>
+  </div>
+
+  <div x-show="error" x-cloak class="mt-4 rounded-control border border-current/25 bg-danger-soft px-4 py-3 text-sm text-danger-soft-foreground" x-text="error"></div>
+
+  <div x-show="showSkeleton" class="mt-4 overflow-hidden rounded-control border border-border bg-surface">
+    <div class="animate-pulse divide-y divide-border">
+      <div class="flex items-center gap-4 px-4 py-4">
+        <span class="h-9 w-9 shrink-0 rounded-full bg-muted"></span>
+        <div class="min-w-0 flex-1 space-y-2"><div class="h-3 w-48 max-w-full rounded bg-muted"></div><div class="h-2.5 w-64 max-w-full rounded bg-muted"></div></div>
+        <span class="hidden h-7 w-44 shrink-0 rounded-control bg-muted sm:block"></span>
+      </div>
+      <div class="flex items-center gap-4 px-4 py-4">
+        <span class="h-9 w-9 shrink-0 rounded-full bg-muted"></span>
+        <div class="min-w-0 flex-1 space-y-2"><div class="h-3 w-40 max-w-full rounded bg-muted"></div><div class="h-2.5 w-56 max-w-full rounded bg-muted"></div></div>
+        <span class="hidden h-7 w-44 shrink-0 rounded-control bg-muted sm:block"></span>
+      </div>
+      <div class="flex items-center gap-4 px-4 py-4">
+        <span class="h-9 w-9 shrink-0 rounded-full bg-muted"></span>
+        <div class="min-w-0 flex-1 space-y-2"><div class="h-3 w-52 max-w-full rounded bg-muted"></div><div class="h-2.5 w-60 max-w-full rounded bg-muted"></div></div>
+        <span class="hidden h-7 w-44 shrink-0 rounded-control bg-muted sm:block"></span>
+      </div>
+    </div>
+  </div>
+
+  <div x-show="showList" x-cloak :class="listClasses" class="mt-4 overflow-hidden rounded-control border border-border bg-surface transition-opacity">
+    <div class="divide-y divide-border">
+      <template x-for="u in users" :key="u.id">
+        <div class="flex flex-col gap-2.5 px-4 py-3.5 sm:flex-row sm:items-center sm:gap-4">
+          <div class="flex min-w-0 items-center gap-4 sm:flex-1">
+            <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-medium uppercase text-primary-foreground" x-text="u.initial"></span>
+            <div class="min-w-0 flex-1">
+              <div class="flex min-w-0 items-center gap-2">
+                <p class="truncate text-sm font-medium text-foreground" x-text="u.email"></p>
+                <span x-show="u.self" class="shrink-0 rounded-full bg-accent px-2 py-0.5 text-[11px] font-medium text-accent-foreground">You</span>
+              </div>
+              <p class="mt-0.5 truncate text-xs text-muted-foreground" x-text="u.meta"></p>
+            </div>
+          </div>
+          <div :class="u.trackClasses" class="ml-13 inline-flex w-fit shrink-0 items-center rounded-control border border-border bg-muted p-0.5 sm:ml-0" role="group" aria-label="Permission level">
+            <template x-for="seg in u.segments" :key="seg.key">
+              <button
+                type="button"
+                :class="seg.classes"
+                :disabled="seg.disabled"
+                :title="seg.title"
+                :data-id="u.id"
+                :data-level="seg.level"
+                @click="setLevel"
+                x-text="seg.label"
+              ></button>
+            </template>
+          </div>
+        </div>
+      </template>
+    </div>
+  </div>
+
+  <div x-show="showEmpty" x-cloak class="mt-4 rounded-control border border-dashed border-border px-6 py-14 text-center">
+    <svg class="mx-auto h-8 w-8 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="11" cy="11" r="7" />
+      <path d="m21 21-4.3-4.3" />
+    </svg>
+    <p class="mt-3 text-sm font-medium text-foreground">No users found</p>
+    <p class="mt-1 text-sm text-muted-foreground" x-text="emptyMessage"></p>
+  </div>
+
+  <div x-show="showList" x-cloak class="mt-4 flex items-center justify-between gap-4">
+    <p class="text-xs text-muted-foreground" x-text="summary"></p>
+    <div class="flex items-center gap-2">
+      <button type="button" class="btn-outline gap-1 px-3 py-1.5 text-xs" :disabled="prevDisabled" @click="prev">
+        <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6" /></svg>
+        Previous
+      </button>
+      <button type="button" class="btn-outline gap-1 px-3 py-1.5 text-xs" :disabled="nextDisabled" @click="next">
+        Next
+        <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6" /></svg>
+      </button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block right %}
+<p class="text-sm font-medium text-foreground">Permission groups</p>
+<p class="mt-1 text-xs leading-5 text-muted-foreground">A user's level is their highest group. Levels can be granted up to your own.</p>
+<div class="mt-4 space-y-3">
+  <div class="rounded-control border border-border bg-surface p-4">
+    <p class="text-sm font-semibold text-foreground">Basic</p>
+    <p class="mt-2 text-xs leading-5 text-muted-foreground">No groups and no permissions — where every new account starts.</p>
+  </div>
+  {% for group in groups %}
+  <div class="rounded-control border border-border bg-surface p-4">
+    <p class="text-sm font-semibold text-foreground">{{ group.name }}</p>
+    <ul class="mt-3 space-y-2.5">
+      {% for perm in group.permissions %}
+      <li>
+        <p class="text-sm text-foreground">{{ perm.description }}</p>
+        <p class="mt-0.5 font-mono text-xs text-muted-foreground">{{ perm.codename }}</p>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}
+
+{% script %}
+<script>
+  document.addEventListener("alpine:init", () => {
+    Alpine.data("adminUsers", () => ({
+      users: [],
+      page: 1,
+      pages: 1,
+      total: 0,
+      query: "",
+      level: "",
+      maxLevel: "",
+      loading: true,
+      booted: false,
+      error: "",
+      listUrl: "",
+      levelUrl: "",
+      searchTimer: null,
+      get showSkeleton() { return !this.booted; },
+      get showList() { return this.booted && this.users.length > 0; },
+      get showEmpty() { return this.booted && !this.loading && this.users.length === 0; },
+      get emptyMessage() {
+        if (this.query) return `Nothing matches “${this.query}”.`;
+        if (this.level) return "No users at this level.";
+        return "Nobody has signed up yet.";
+      },
+      get summary() {
+        const users = this.total === 1 ? "user" : "users";
+        return `${this.total} ${users} · page ${this.page} of ${this.pages}`;
+      },
+      get prevDisabled() { return this.loading || this.page <= 1; },
+      get nextDisabled() { return this.loading || this.page >= this.pages; },
+      get listClasses() { return this.loading ? "opacity-60" : ""; },
+      init() {
+        this.listUrl = this.$el.dataset.listUrl;
+        this.levelUrl = this.$el.dataset.levelUrl;
+        this.load();
+      },
+      search(evt) {
+        this.query = evt.target.value;
+        clearTimeout(this.searchTimer);
+        this.searchTimer = setTimeout(() => {
+          this.page = 1;
+          this.load();
+        }, 250);
+      },
+      filterLevel(evt) {
+        this.level = evt.target.value;
+        this.page = 1;
+        this.load();
+      },
+      prev() {
+        if (this.page > 1) {
+          this.page -= 1;
+          this.load();
+        }
+      },
+      next() {
+        if (this.page < this.pages) {
+          this.page += 1;
+          this.load();
+        }
+      },
+      async load() {
+        this.loading = true;
+        this.error = "";
+        const params = new URLSearchParams({
+          search: this.query,
+          level: this.level,
+          page: this.page,
+        });
+        try {
+          const data = await api(`${this.listUrl}?${params}`);
+          this.maxLevel = data.max_level;
+          this.users = data.users.map((u) => this.enrich(u));
+          this.page = data.page;
+          this.pages = data.pages;
+          this.total = data.total;
+        } catch (error) {
+          this.error = error.message;
+        }
+        this.loading = false;
+        this.booted = true;
+      },
+      enrich(u) {
+        const parts = [];
+        if (u.name) parts.push(u.name);
+        parts.push(`Joined ${u.joined}`);
+        parts.push(u.last_login ? `Last seen ${u.last_login}` : "Never signed in");
+        u.meta = parts.join(" · ");
+        u.trackClasses = u.editable ? "" : "opacity-55";
+        u.segments = ["basic", "admin", "developer"].map((level) => {
+          const active = u.level === level;
+          const allowed = u.editable && !active &&
+            (level !== "developer" || this.maxLevel === "developer");
+          let classes = "rounded-[calc(var(--radius-control)-2px)] px-2.5 py-1 text-xs font-medium transition disabled:pointer-events-none ";
+          classes += active ? "bg-surface text-foreground shadow-xs" : "text-muted-foreground";
+          if (allowed) classes += " hover:text-foreground";
+          let title = "";
+          if (u.self) title = "You cannot change your own level";
+          else if (!u.editable) title = "Above your level";
+          else if (!allowed && !active) title = "Only developers can grant developer";
+          return {
+            key: `${u.id}:${level}`,
+            level,
+            label: level.charAt(0).toUpperCase() + level.slice(1),
+            classes,
+            disabled: !allowed,
+            title,
+          };
+        });
+        return u;
+      },
+      async setLevel(evt) {
+        const { id, level } = evt.currentTarget.dataset;
+        this.error = "";
+        try {
+          await api(this.levelUrl, { method: "POST", body: { user_id: id, level } });
+          await this.load();
+        } catch (error) {
+          this.error = error.message;
+        }
+      },
+    }));
+  });
+</script>
+{% endscript %}

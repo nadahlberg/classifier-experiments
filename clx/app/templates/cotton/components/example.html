@@ -1,0 +1,4 @@
+<div class="mt-6 overflow-hidden rounded-surface border border-border">
+  <div class="flex flex-wrap items-center gap-3 bg-surface p-6">{{ slot }}</div>
+  {% if code %}<pre class="overflow-x-auto border-t border-border bg-inverse-surface px-5 py-4 font-mono text-xs leading-relaxed text-inverse-foreground/80"><code>{{ code }}</code></pre>{% endif %}
+</div>

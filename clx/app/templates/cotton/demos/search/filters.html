@@ -1,0 +1,62 @@
+<div x-data="docketSearchFilters" class="space-y-6">
+  <div>
+    <p class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Jurisdiction</p>
+    <div class="mt-2 space-y-0.5">
+      <template x-for="item in $store.docketSearch.facets.jurisdiction" :key="item.value">
+        <button
+          type="button"
+          :class="item.cssClass"
+          :data-facet="item.facet"
+          :data-value="item.value"
+          @click="toggleFacet"
+        >
+          <span class="min-w-0 truncate" x-text="item.label"></span>
+          <span x-show="$store.docketSearch.countsSettled" class="shrink-0 text-xs opacity-60" x-text="item.countLabel"></span>
+        </button>
+      </template>
+    </div>
+  </div>
+
+  <div>
+    <p class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Jury demand</p>
+    <div class="mt-2 space-y-0.5">
+      <template x-for="item in $store.docketSearch.facets.jury_demand" :key="item.value">
+        <button
+          type="button"
+          :class="item.cssClass"
+          :data-facet="item.facet"
+          :data-value="item.value"
+          @click="toggleFacet"
+        >
+          <span class="min-w-0 truncate" x-text="item.label"></span>
+          <span x-show="$store.docketSearch.countsSettled" class="shrink-0 text-xs opacity-60" x-text="item.countLabel"></span>
+        </button>
+      </template>
+    </div>
+  </div>
+
+  <button
+    type="button"
+    x-show="$store.docketSearch.hasFilters"
+    x-cloak
+    @click="clearFilters"
+    class="text-xs font-medium text-accent-foreground transition hover:text-foreground"
+  >
+    Clear filters
+  </button>
+</div>
+
+{% script %}
+<script>
+  document.addEventListener("alpine:init", () => {
+    Alpine.data("docketSearchFilters", () => ({
+      toggleFacet(evt) {
+        this.$store.docketSearch.toggleFacet(evt);
+      },
+      clearFilters() {
+        this.$store.docketSearch.clearFilters();
+      },
+    }));
+  });
+</script>
+{% endscript %}

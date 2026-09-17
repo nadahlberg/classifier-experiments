@@ -1,0 +1,7 @@
+<c-vars href="" />
+
+{% if href %}
+  <a href="{{ href }}" {{ attrs }} class="flex items-center gap-2.5 whitespace-nowrap rounded-md px-3 py-2 text-sm text-accent-foreground transition hover:bg-accent">{{ slot }}</a>
+{% else %}
+  <button type="button" {{ attrs }} class="flex w-full items-center gap-2.5 whitespace-nowrap rounded-md px-3 py-2 text-left text-sm text-accent-foreground transition hover:bg-accent">{{ slot }}</button>
+{% endif %}

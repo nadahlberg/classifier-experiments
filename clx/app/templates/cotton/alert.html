@@ -1,0 +1,8 @@
+<c-vars variant="info" title="" />
+
+<div class="rounded-control border border-current/25 px-4 py-3 text-sm
+  {% if variant == 'success' %}bg-success-soft text-success-soft-foreground{% elif variant == 'warning' %}bg-warning-soft text-warning-soft-foreground{% elif variant == 'danger' %}bg-danger-soft text-danger-soft-foreground{% else %}bg-info-soft text-info-soft-foreground{% endif %}"
+>
+  {% if title %}<p class="font-medium">{{ title }}</p>{% endif %}
+  <div class="{% if title %}mt-1{% endif %}">{{ slot }}</div>
+</div>

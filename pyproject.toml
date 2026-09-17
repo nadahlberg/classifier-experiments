@@ -1,0 +1,119 @@
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = [
+  "setuptools",
+]
+
+[project]
+name = "clx"
+version = "0.0.1"
+requires-python = ">=3.13"
+readme = "README.md"
+
+urls.Repository = "https://github.com/nadahlberg/classifier-experiments"
+urls."Organisation Homepage" = "https://nates.ai/"
+
+dependencies = [
+  "celery[redis]>=5.5",
+  "django>=5.2.7",
+  "django-allauth>=65.18.0",
+  "django-anymail[postmark]>=13.1",
+  "django-cors-headers>=4.9.0",
+  "django-cotton>=2.7.2",
+  "django-csp>=4.0",
+  "django-oauth-toolkit>=3.4,<4",
+  "django-ratelimit>=4.1",
+  "django-storages[s3]>=1.14.6",
+  "elasticsearch>=9,<10",
+  "fastmcp>=3.4,<4",
+  "jsonschema>=4.26",
+  "pre-commit>=4.3.0",
+  "psycopg[binary]>=3.3.4",
+  "redis>=6,<6.5",
+  "sentry-sdk>=2.68",
+  "uvicorn[standard]>=0.52.1",
+]
+
+optional-dependencies.dev = [
+  "celery-types>=0.23.0",
+  "django-stubs>=6.0.5",
+  "mypy>=2.1.0",
+  "pulumi>=3,<4",
+  "pytest>=9.0.3",
+  "pytest-django>=4.12.0",
+  "types-jsonschema>=4.26",
+]
+
+[project.scripts]
+manage = "clx.manage:main"
+
+[tool.setuptools.packages.find]
+include = ["clx*"]
+
+[tool.setuptools.package-data]
+clx = ["data/*"]
+
+[tool.ruff]
+extend-exclude = [
+  "archive",
+]
+lint.isort.known-first-party = [
+  "clx",
+]
+lint.extend-safe-fixes = [
+  # non-pep585-annotation
+  "UP006",
+]
+lint.select = [
+  # flake8-bugbear
+  "B",
+  # flake8-comprehensions
+  "C4",
+  # pycodestyle
+  "E",
+  # Pyflakes errors
+  "F",
+  # isort
+  "I",
+  # flake8-simplify
+  "SIM",
+  # flake8-tidy-imports
+  "TID",
+  # pyupgrade
+  "UP",
+  # Pyflakes warnings
+  "W",
+]
+lint.ignore = [
+  # flake8-bugbear opinionated rules
+  "B9",
+  # line-too-long
+  "E501",
+  # suppressible-exception
+  "SIM105",
+  # if-else-block-instead-of-if-exp
+  "SIM108",
+  # printf-string-formatting
+  "UP031",
+]
+line-length = 79
+
+[tool.mypy]
+plugins = ["mypy_django_plugin.main"]
+strict = true
+
+[[tool.mypy.overrides]]
+module = [
+  "allauth.*",
+  "django_ratelimit.*",
+  "oauth2_provider.*",
+]
+ignore_missing_imports = true
+
+[tool.django-stubs]
+django_settings_module = "clx.settings"
+
+[tool.pytest.ini_options]
+addopts = "--ignore=archive"
+DJANGO_SETTINGS_MODULE = "clx.settings"
+django_find_project = false

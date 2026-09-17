@@ -1,0 +1,94 @@
+name: ci
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  pre-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: astral-sh/setup-uv@v10.0.1
+        with:
+          enable-cache: true
+
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit-3|${{ hashFiles('uv.lock') }}|${{ hashFiles('.pre-commit-config.yaml') }}
+
+      - run: uv run pre-commit run --all-files
+
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: clx
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 5
+      elasticsearch:
+        image: elasticsearch:9.5.1
+        env:
+          discovery.type: single-node
+          xpack.security.enabled: "false"
+          ES_JAVA_OPTS: -Xms512m -Xmx512m
+        ports:
+          - 9200:9200
+        options: >-
+          --health-cmd "curl -sf http://localhost:9200/_cluster/health"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: astral-sh/setup-uv@v10.0.1
+        with:
+          enable-cache: true
+
+      - run: uv run --extra dev pytest
+
+  mypy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: astral-sh/setup-uv@v10.0.1
+        with:
+          enable-cache: true
+
+      - run: uv run --extra dev mypy clx
+
+  migrations:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: astral-sh/setup-uv@v10.0.1
+        with:
+          enable-cache: true
+
+      - run: uv run manage makemigrations --check --dry-run
+
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: astral-sh/setup-uv@v10.0.1
+        with:
+          enable-cache: true
+
+      - run: uv run manage check --fail-level WARNING

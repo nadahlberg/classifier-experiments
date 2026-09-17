@@ -1,0 +1,410 @@
+{% extends "layouts/three_panel.html" %}
+
+{% block title %}API authentication demo{% endblock %}
+
+{% block left %}
+<div
+  x-data="apiTokens"
+  data-list-url="{% url 'tokens-list' %}"
+  data-create-url="{% url 'tokens-create' %}"
+  data-max-days="{{ max_lifetime_days }}"
+  class="space-y-6"
+>
+  <div>
+    <p class="text-sm font-medium text-foreground">API tokens</p>
+    <p class="mt-1 text-xs leading-5 text-muted-foreground">
+      The plaintext is shown once, at creation. Only its hash is stored.
+    </p>
+  </div>
+
+  <form @submit.prevent="create" class="space-y-3">
+    <div>
+      <label for="token-name" class="block text-xs font-medium text-accent-foreground">Name</label>
+      <input id="token-name" name="name" type="text" placeholder="laptop script" required class="mt-1.5">
+    </div>
+
+    <div>
+      <p class="text-xs font-medium text-accent-foreground">Scopes</p>
+      <div class="mt-1.5 space-y-1.5">
+        {% for scope in scopes %}
+        <label class="flex items-start gap-2 text-xs text-foreground">
+          <input type="checkbox" name="scope" value="{{ scope.name }}" class="mt-0.5">
+          <span>
+            <span class="font-mono">{{ scope.name }}</span>
+            <span class="block text-muted-foreground">{{ scope.description }}</span>
+            <span class="block text-muted-foreground">{{ scope.limit }}/hr budget</span>
+          </span>
+        </label>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div>
+      <label for="token-lifetime" class="block text-xs font-medium text-accent-foreground">Expires in</label>
+      <select id="token-lifetime" name="lifetime" class="mt-1.5">
+        <option value="1">1 day</option>
+        <option value="7">7 days</option>
+        <option value="30" selected>30 days</option>
+        <option value="90">90 days</option>
+      </select>
+      <p class="mt-1 text-xs text-muted-foreground">Maximum {{ max_lifetime_days }} days. Every token expires.</p>
+    </div>
+
+    <button type="submit" class="btn w-full" :disabled="busy">Create token</button>
+    <p x-show="error" x-cloak class="text-xs text-danger" x-text="error"></p>
+  </form>
+
+  <div x-show="$store.apiDemo.plaintext" x-cloak class="rounded-surface border border-success/40 bg-success-soft p-3">
+    <p class="text-xs font-medium text-success-soft-foreground">Copy this now &mdash; it will not be shown again.</p>
+    <pre class="mt-1.5 overflow-x-auto rounded-control bg-inverse-surface p-2 font-mono text-xs text-inverse-foreground" x-text="$store.apiDemo.plaintext"></pre>
+    <button type="button" @click="copyToken" class="mt-1.5 text-xs text-success-soft-foreground hover:underline" x-text="copyLabel"></button>
+  </div>
+
+  <div class="h-px bg-border/60"></div>
+
+  <div class="space-y-2">
+    <p class="text-xs font-medium text-accent-foreground" x-text="$store.apiDemo.tokenSummary"></p>
+    <template x-for="token in $store.apiDemo.tokens" :key="token.id">
+      <div class="rounded-control border border-border p-2.5">
+        <div class="flex items-start justify-between gap-2">
+          <p class="min-w-0 truncate text-xs font-medium text-foreground" x-text="token.name"></p>
+          <span class="shrink-0 text-xs" :class="token.statusClass" x-text="token.statusLabel"></span>
+        </div>
+        <p class="mt-0.5 font-mono text-xs text-muted-foreground" x-text="token.scopeLabel"></p>
+        <p class="mt-0.5 text-xs text-muted-foreground" x-text="token.expiresLabel"></p>
+        <p class="text-xs text-muted-foreground" x-text="token.lastUsedLabel"></p>
+        <div x-show="token.isActive" class="mt-2 flex gap-2">
+          <button type="button" :data-id="token.id" @click="rotate" class="text-xs text-accent-foreground hover:text-foreground">Rotate</button>
+          <button type="button" :data-id="token.id" @click="revoke" class="text-xs text-danger hover:underline">Revoke</button>
+        </div>
+      </div>
+    </template>
+  </div>
+</div>
+{% endblock %}
+
+{% block toolbar %}
+<p class="truncate text-sm font-medium text-foreground">API authentication</p>
+<p class="hidden shrink-0 text-xs text-muted-foreground sm:block">
+  {{ per_session_limit }}/hr per session &middot; {{ per_user_limit }}/hr per user
+</p>
+{% endblock %}
+
+{% block center %}
+<div class="mx-auto max-w-3xl space-y-4">
+  <div class="rounded-surface border border-border bg-surface p-4">
+    <p class="text-sm font-medium text-foreground">What this page shows</p>
+    <p class="mt-1 text-xs leading-5 text-muted-foreground">
+      Each endpoint below declares which authentication methods it accepts. The
+      three buttons send the same request with a session cookie, with a bearer
+      token, and with neither, so you can see which combinations a given
+      endpoint allows. The curl block runs the same call from a terminal; once
+      you create a token above it is substituted into the command.
+    </p>
+  </div>
+
+  <c-demos.api-endpoint
+    title="Open endpoint"
+    url="{% url 'demos-auth-public' %}"
+    method="GET"
+    anonymous="yes"
+    description="No authentication at all. This is how /api/health/ behaves: anyone can call it from anywhere."
+  />
+
+  <c-demos.api-endpoint
+    title="Session only"
+    url="{% url 'demos-auth-session' %}"
+    method="GET"
+    session="yes"
+    description="Accepts the browser session cookie. A bearer token is rejected with 401, even a valid one."
+  />
+
+  <c-demos.api-endpoint
+    title="Token only"
+    url="{% url 'demos-auth-token' %}"
+    method="GET"
+    token="yes"
+    description="Accepts an API token. The logged-in session is rejected, which is what you want for a machine-facing endpoint."
+  />
+
+  <c-demos.api-endpoint
+    title="Session or token"
+    url="{% url 'demos-auth-either' %}"
+    method="GET"
+    session="yes"
+    token="yes"
+    description="The authenticator chain tries each method in order and takes the first that succeeds."
+  />
+
+  <c-demos.api-endpoint
+    title="Scoped read"
+    url="{% url 'demos-auth-scoped-read' %}"
+    method="GET"
+    session="yes"
+    token="yes"
+    scope="demo:read"
+    description="A token must carry demo:read. A session carries the user's full rights, so scopes do not apply to it."
+  />
+
+  <c-demos.api-endpoint
+    title="Scoped write"
+    url="{% url 'demos-auth-scoped-write' %}"
+    method="POST"
+    session="yes"
+    token="yes"
+    scope="demo:write"
+    body="{}"
+    description="Same, for a write. Create a token without demo:write to see the 403."
+  />
+
+  <c-demos.api-endpoint
+    title="Two scopes at once"
+    url="{% url 'demos-auth-scoped-both' %}"
+    method="POST"
+    session="yes"
+    token="yes"
+    scope="demo:read + demo:write"
+    body="{}"
+    description="Requires both scopes and spends from both budgets, so the tighter of the two is what actually bounds it."
+  />
+
+  {% for permission in permissions %}{% if permission.name == "app.manage_admin" %}
+  <c-demos.api-endpoint
+    title="Requires a permission"
+    url="{% url 'demos-auth-admin' %}"
+    method="GET"
+    session="yes"
+    token="yes"
+    perm="app.manage_admin"
+    perm_granted="{% if permission.granted %}yes{% else %}no{% endif %}"
+    description="Permissions bind the user, not the credential, so unlike scopes they apply to a session too."
+  />
+  {% endif %}{% endfor %}
+
+  {% for permission in permissions %}{% if permission.name == "app.manage_developer" %}
+  <c-demos.api-endpoint
+    title="Permission and scope together"
+    url="{% url 'demos-auth-developer' %}"
+    method="GET"
+    session="yes"
+    token="yes"
+    scope="demo:read"
+    perm="app.manage_developer"
+    perm_granted="{% if permission.granted %}yes{% else %}no{% endif %}"
+    description="A token's rights are its owner's permissions intersected with its own scopes, so both have to hold."
+  />
+  {% endif %}{% endfor %}
+
+  <c-demos.api-endpoint
+    title="Tightly rate limited"
+    url="{% url 'demos-auth-burst' %}"
+    method="GET"
+    session="yes"
+    token="yes"
+    description="Five calls per minute. Click repeatedly to get a 429 with a Retry-After header, without spending your hourly budget."
+  />
+</div>
+{% endblock %}
+
+{% block right %}
+<div class="space-y-4">
+  <div>
+    <p class="text-sm font-medium text-foreground">Your permissions</p>
+    <p class="mt-1 text-xs leading-5 text-muted-foreground">
+      Granted by group membership, and checked on every call regardless of
+      which credential you use.
+    </p>
+  </div>
+
+  <div class="space-y-2">
+    {% for permission in permissions %}
+    <div class="rounded-control border border-border p-2.5">
+      <div class="flex items-center justify-between gap-2">
+        <p class="min-w-0 truncate font-mono text-xs text-foreground">{{ permission.name }}</p>
+        {% if permission.granted %}
+        <c-badge color="success">granted</c-badge>
+        {% else %}
+        <c-badge color="danger">not granted</c-badge>
+        {% endif %}
+      </div>
+      <p class="mt-0.5 text-xs text-muted-foreground">{{ permission.description }}</p>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="h-px bg-border/60"></div>
+
+  <div>
+    <p class="text-sm font-medium text-foreground">Rate limit tiers</p>
+    <p class="mt-1 text-xs leading-5 text-muted-foreground">
+      A request is counted against every tier that applies to it, and the
+      first one to run out is what returns the 429.
+    </p>
+  </div>
+
+  <div class="space-y-2.5">
+    <div class="rounded-control border border-border p-2.5">
+      <p class="text-xs font-medium text-foreground">Per session &middot; {{ per_session_limit }}/hr</p>
+      <p class="mt-0.5 text-xs leading-5 text-muted-foreground">
+        Browser traffic only, and much looser: a polling page legitimately
+        makes thousands of calls an hour.
+      </p>
+    </div>
+    <div class="rounded-control border border-border p-2.5">
+      <p class="text-xs font-medium text-foreground">Per user &middot; {{ per_user_limit }}/hr</p>
+      <p class="mt-0.5 text-xs leading-5 text-muted-foreground">
+        The aggregate ceiling across a user's tokens, so minting a fresh
+        one does not reset it. Sessions cannot rotate, so it skips them.
+      </p>
+    </div>
+    <div class="rounded-control border border-border p-2.5">
+      <p class="text-xs font-medium text-foreground">Per user and scope</p>
+      <p class="mt-0.5 text-xs leading-5 text-muted-foreground">
+        Separate budgets per scope, so a polling read workload cannot
+        exhaust what a write workload depends on.
+      </p>
+      <ul class="mt-1.5 space-y-0.5">
+        {% for scope in scopes %}
+        <li class="font-mono text-xs text-muted-foreground">{{ scope.name }} &middot; {{ scope.limit }}/hr</li>
+        {% endfor %}
+        <li class="font-mono text-xs text-muted-foreground">unscoped &middot; {{ default_scope_limit }}/hr</li>
+      </ul>
+    </div>
+    <div class="rounded-control border border-border p-2.5">
+      <p class="text-xs font-medium text-foreground">Per endpoint</p>
+      <p class="mt-0.5 text-xs leading-5 text-muted-foreground">
+        An override for one endpoint that is unusually expensive. The burst
+        endpoint below uses it.
+      </p>
+    </div>
+  </div>
+
+  <p class="text-xs leading-5 text-muted-foreground">
+    Sessions carry no scopes and cannot be rotated, so the session ceiling
+    is the only tier that applies to them.
+  </p>
+</div>
+{% endblock %}
+
+{% script %}
+<script>
+  document.addEventListener("alpine:init", () => {
+    Alpine.store("apiDemo", {
+      tokens: [],
+      plaintext: "",
+      tokenSummary: "No tokens yet",
+      started: false,
+      start(config) {
+        if (this.started) return;
+        this.started = true;
+        this.listUrl = config.listUrl;
+        this.createUrl = config.createUrl;
+        this.refresh();
+      },
+      async refresh() {
+        try {
+          const data = await api(this.listUrl);
+          this.tokens = data.tokens.map((t) => this.decorate(t));
+          this.tokenSummary = this.summarise();
+        } catch {}
+      },
+      decorate(token) {
+        token.isActive = token.is_active;
+        token.scopeLabel = token.scopes.length
+          ? token.scopes.join(", ")
+          : "no scopes";
+        if (token.is_revoked) {
+          token.statusLabel = "revoked";
+          token.statusClass = "text-danger";
+        } else if (token.is_expired) {
+          token.statusLabel = "expired";
+          token.statusClass = "text-warning";
+        } else {
+          token.statusLabel = "active";
+          token.statusClass = "text-success";
+        }
+        token.expiresLabel =
+          "Expires " + new Date(token.expires_at).toLocaleDateString();
+        token.lastUsedLabel = token.last_used_at
+          ? "Last used " + new Date(token.last_used_at).toLocaleString()
+          : "Never used";
+        return token;
+      },
+      summarise() {
+        const active = this.tokens.filter((t) => t.is_active).length;
+        if (!this.tokens.length) return "No tokens yet";
+        return active + " active of " + this.tokens.length;
+      },
+    });
+
+    Alpine.data("apiTokens", () => ({
+      busy: false,
+      error: "",
+      copyLabel: "Copy",
+      init() {
+        this.$store.apiDemo.start(this.$el.dataset);
+      },
+      async create() {
+        const root = this.$el;
+        const name = root.querySelector("#token-name").value;
+        const lifetime = root.querySelector("#token-lifetime").value;
+        const scopes = Array.from(
+          root.querySelectorAll('input[name="scope"]:checked'),
+        ).map((input) => input.value);
+
+        this.busy = true;
+        this.error = "";
+        try {
+          const data = await api(this.$store.apiDemo.createUrl, {
+            method: "POST",
+            body: {
+              name,
+              scopes,
+              lifetime_days: Number(lifetime),
+            },
+          });
+          this.$store.apiDemo.plaintext = data.plaintext;
+          root.querySelector("#token-name").value = "";
+          await this.$store.apiDemo.refresh();
+        } catch (error) {
+          this.error = error.message;
+        }
+        this.busy = false;
+      },
+      async revoke(evt) {
+        const id = evt.currentTarget.dataset.id;
+        try {
+          await api("/api/tokens/" + id + "/revoke/", { method: "POST" });
+          await this.$store.apiDemo.refresh();
+        } catch (error) {
+          this.error = error.message;
+        }
+      },
+      async rotate(evt) {
+        const id = evt.currentTarget.dataset.id;
+        try {
+          const data = await api("/api/tokens/" + id + "/rotate/", {
+            method: "POST",
+          });
+          this.$store.apiDemo.plaintext = data.plaintext;
+          await this.$store.apiDemo.refresh();
+        } catch (error) {
+          this.error = error.message;
+        }
+      },
+      async copyToken() {
+        try {
+          await navigator.clipboard.writeText(
+            this.$store.apiDemo.plaintext,
+          );
+          this.copyLabel = "Copied";
+        } catch {
+          this.copyLabel = "Copy failed";
+        }
+        setTimeout(() => { this.copyLabel = "Copy"; }, 1500);
+      },
+    }));
+
+  });
+</script>
+{% endscript %}

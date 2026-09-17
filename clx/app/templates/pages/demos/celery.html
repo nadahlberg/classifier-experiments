@@ -1,0 +1,262 @@
+{% extends "layouts/three_panel.html" %}
+
+{% block title %}Celery demo{% endblock %}
+
+{% block left %}
+<div
+  x-data="demoControls"
+  data-jobs-url="{% url 'demos-jobs' %}"
+  data-heartbeat-url="{% url 'demos-heartbeat' %}"
+  data-run-url="{% url 'demos-job-run' %}"
+  data-batch-url="{% url 'demos-job-run-batch' %}"
+  class="space-y-6"
+>
+  <form @submit.prevent="runNow">
+    {% csrf_token %}
+    <p class="text-sm font-medium text-foreground">Simple task</p>
+    <p class="mt-1 text-xs leading-5 text-muted-foreground">A short job, queued immediately.</p>
+    <button type="submit" class="btn mt-3 w-full" :disabled="busy">Run task</button>
+  </form>
+
+  <div class="h-px bg-border/60"></div>
+
+  <form @submit.prevent="schedule">
+    <p class="text-sm font-medium text-foreground">Scheduled task</p>
+    <p class="mt-1 text-xs leading-5 text-muted-foreground">Queued now, held by the worker until the delay elapses.</p>
+    <label for="delay-seconds" class="mt-3 block text-xs font-medium text-accent-foreground">Delay (seconds)</label>
+    <input id="delay-seconds" type="number" min="1" max="3600" :value="delaySeconds" @input="setDelay" class="mt-1.5">
+    <button type="submit" class="btn-outline mt-3 w-full" :disabled="busy">Schedule task</button>
+  </form>
+
+  <div class="h-px bg-border/60"></div>
+
+  <form @submit.prevent="runBatch">
+    <p class="text-sm font-medium text-foreground">Batch task</p>
+    <p class="mt-1 text-xs leading-5 text-muted-foreground">A parent job fanned out into subtasks that run in parallel.</p>
+    <label for="subtask-count" class="mt-3 block text-xs font-medium text-accent-foreground">Subtasks</label>
+    <input id="subtask-count" type="number" min="1" max="20" :value="subtaskCount" @input="setSubtasks" class="mt-1.5">
+    <label for="fail-rate" class="mt-3 block text-xs font-medium text-accent-foreground">Fail rate (0&ndash;1)</label>
+    <input id="fail-rate" type="number" min="0" max="1" step="0.1" :value="failRate" @input="setFailRate" class="mt-1.5">
+    <button type="submit" class="btn-outline mt-3 w-full" :disabled="busy">Run batch</button>
+  </form>
+
+  <p x-show="error" x-cloak class="text-xs text-danger" x-text="error"></p>
+</div>
+{% endblock %}
+
+{% block toolbar %}
+<p class="min-w-0 truncate text-sm font-medium text-foreground">Celery</p>
+<p x-data class="shrink-0 text-xs text-muted-foreground" x-text="$store.demo.summary"></p>
+{% endblock %}
+
+{% block center %}
+<div x-data="demoJobs" class="mx-auto max-w-3xl space-y-2">
+  <template x-for="job in jobs" :key="job.id">
+    <div class="rounded-control border border-border bg-surface px-4 py-3">
+      <div class="flex items-center justify-between gap-3">
+        <div class="min-w-0">
+          <p class="truncate text-sm font-medium text-foreground" x-text="job.name"></p>
+          <p class="mt-0.5 text-xs text-muted-foreground" x-text="job.subtitle"></p>
+        </div>
+        <div class="flex shrink-0 items-center gap-1">
+          <span x-show="job.isScheduled"><c-badge color="info">Scheduled</c-badge></span>
+          <span x-show="job.isQueued"><c-badge>Queued</c-badge></span>
+          <span x-show="job.isRunning"><c-badge color="warning">Running</c-badge></span>
+          <span x-show="job.isSucceeded"><c-badge color="success">Done</c-badge></span>
+          <span x-show="job.isCancelled"><c-badge>Cancelled</c-badge></span>
+          <span x-show="job.isFailed"><c-badge color="danger">Failed</c-badge></span>
+          <button type="button" x-show="job.isRunning" :data-id="job.id" @click="cancel" aria-label="Cancel job" class="ml-1 rounded-md p-1.5 text-muted-foreground transition hover:bg-accent hover:text-foreground">
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="9" />
+              <rect x="9" y="9" width="6" height="6" rx="1" />
+            </svg>
+          </button>
+          <button type="button" :data-id="job.id" @click="remove" aria-label="Delete job" class="rounded-md p-1.5 text-muted-foreground transition hover:bg-accent hover:text-danger">
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 6h18" />
+              <path d="M9 6V4h6v2" />
+              <path d="M19 6l-1 14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1L5 6" />
+              <path d="M10 11v6" />
+              <path d="M14 11v6" />
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div x-show="job.children.length" class="mt-3 space-y-2 border-l border-border pl-4">
+        <template x-for="child in job.children" :key="child.id">
+          <div class="flex items-center justify-between gap-3">
+            <p class="min-w-0 truncate text-xs text-accent-foreground" x-text="child.name"></p>
+            <div class="shrink-0">
+              <span x-show="child.isQueued"><c-badge>Queued</c-badge></span>
+              <span x-show="child.isRunning"><c-badge color="warning">Running</c-badge></span>
+              <span x-show="child.isSucceeded"><c-badge color="success">Done</c-badge></span>
+              <span x-show="child.isCancelled"><c-badge>Cancelled</c-badge></span>
+              <span x-show="child.isFailed"><c-badge color="danger">Failed</c-badge></span>
+            </div>
+          </div>
+        </template>
+      </div>
+    </div>
+  </template>
+  <div x-show="empty" class="rounded-control border border-dashed border-border-strong px-4 py-12 text-center">
+    <p class="text-sm text-muted-foreground">No jobs yet. Fire one from the left panel.</p>
+  </div>
+</div>
+{% endblock %}
+
+{% block right %}
+<p class="text-sm font-medium text-foreground">How it works</p>
+<ul class="mt-4 space-y-3 text-sm leading-6 text-muted-foreground">
+  <li>Every job here is a Celery task that sleeps for two to ten seconds and records its progress on a DemoJob row.</li>
+  <li>Scheduled jobs are queued immediately with a countdown; the worker holds them until the delay elapses.</li>
+  <li>A batch is a parent job fanned out into subtasks. The last subtask to finish completes the parent, and a failed or cancelled subtask propagates up to it.</li>
+  <li>The page polls the jobs API every two seconds — the worker never talks to the browser.</li>
+  <li>Jobs are scoped to your user, so everyone sees only their own list.</li>
+</ul>
+
+<div class="mt-8 h-px bg-border/60"></div>
+
+<p class="mt-6 text-sm font-medium text-foreground">Periodic tasks</p>
+<p class="mt-2 text-sm leading-6 text-muted-foreground">
+  Beat also fires a heartbeat task every {{ heartbeat_seconds }} seconds — a
+  <span class="font-mono text-xs">CELERY_BEAT_SCHEDULE</span> entry in
+  settings.py. All it does is write the current time to redis.
+</p>
+<div x-data class="mt-4 rounded-control border border-border bg-muted px-4 py-3">
+  <p class="text-xs font-medium uppercase tracking-wide text-muted-foreground">Last heartbeat</p>
+  <p class="mt-1 text-sm text-foreground" x-text="$store.demo.heartbeatLabel"></p>
+</div>
+{% endblock %}
+
+{% script %}
+<script>
+  document.addEventListener("alpine:init", () => {
+    Alpine.store("demo", {
+      jobs: [],
+      heartbeat: null,
+      heartbeatLabel: "No run recorded yet.",
+      summary: "0 jobs",
+      busy: false,
+      error: "",
+      started: false,
+      start(config) {
+        if (this.started) return;
+        this.started = true;
+        this.jobsUrl = config.jobsUrl;
+        this.heartbeatUrl = config.heartbeatUrl;
+        this.runUrl = config.runUrl;
+        this.batchUrl = config.batchUrl;
+        this.refresh();
+        setInterval(() => this.refresh(), 2000);
+      },
+      async refresh() {
+        try {
+          const [jobs, heartbeat] = await Promise.all([
+            fetch(this.jobsUrl),
+            fetch(this.heartbeatUrl),
+          ]);
+          if (jobs.ok) {
+            this.jobs = (await jobs.json()).jobs.map((job) => this.decorate(job));
+          }
+          if (heartbeat.ok) this.heartbeat = (await heartbeat.json()).last_run;
+        } catch {}
+        this.heartbeatLabel = this.formatHeartbeat();
+        this.summary = this.formatSummary();
+      },
+      decorate(job) {
+        job.isScheduled = job.status === "pending" && !!job.scheduled_for;
+        job.isQueued = job.status === "pending" && !job.scheduled_for;
+        job.isRunning = job.status === "running";
+        job.isSucceeded = job.status === "succeeded";
+        job.isCancelled = job.status === "cancelled";
+        job.isFailed = job.status === "failed";
+        job.subtitle = this.subtitle(job);
+        (job.children || []).forEach((child) => this.decorate(child));
+        return job;
+      },
+      formatHeartbeat() {
+        if (!this.heartbeat) return "No run recorded yet.";
+        const at = new Date(this.heartbeat);
+        return at.toLocaleTimeString() + " · " + at.toLocaleDateString();
+      },
+      formatSummary() {
+        const all = this.jobs.flatMap((job) => [job, ...job.children]);
+        const running = all.filter((job) => job.status === "running").length;
+        return running ? `${running} running · ${this.jobs.length} jobs` : `${this.jobs.length} jobs`;
+      },
+      async send(method, url, body) {
+        this.busy = true;
+        this.error = "";
+        try {
+          await api(url, { method, body });
+          await this.refresh();
+        } catch (error) {
+          this.error = error.message;
+        } finally {
+          this.busy = false;
+        }
+      },
+      post(url, body) {
+        return this.send("POST", url, body);
+      },
+      cancel(id) {
+        return this.post(this.jobsUrl + id + "/cancel/", {});
+      },
+      remove(id) {
+        return this.send("DELETE", this.jobsUrl + id + "/");
+      },
+      runNow() {
+        return this.post(this.runUrl, {});
+      },
+      schedule(delaySeconds) {
+        return this.post(this.runUrl, { delay_seconds: delaySeconds });
+      },
+      runBatch(subtaskCount, failRate) {
+        return this.post(this.batchUrl, {
+          subtask_count: subtaskCount,
+          fail_rate: failRate,
+        });
+      },
+      subtitle(job) {
+        if (job.status === "cancelled") return "cancelled at " + this.time(job.finished_at);
+        if (job.status === "pending" && job.scheduled_for) return "starts at " + this.time(job.scheduled_for);
+        if (job.children.length) {
+          const done = job.children.filter((child) => child.status === "succeeded").length;
+          const failed = job.children.filter((child) => child.status === "failed").length;
+          return `${done}/${job.children.length} subtasks done` + (failed ? ` · ${failed} failed` : "");
+        }
+        if (job.status === "succeeded") return "finished at " + this.time(job.finished_at);
+        if (job.status === "running") return "started at " + this.time(job.started_at);
+        return "queued at " + this.time(job.created_at);
+      },
+      time(iso) {
+        return iso ? new Date(iso).toLocaleTimeString() : "";
+      },
+    });
+
+    Alpine.data("demoControls", () => ({
+      delaySeconds: 30,
+      subtaskCount: 5,
+      failRate: 0,
+      init() { this.$store.demo.start(this.$el.dataset); },
+      get busy() { return this.$store.demo.busy; },
+      get error() { return this.$store.demo.error; },
+      setDelay(evt) { this.delaySeconds = evt.target.value; },
+      setSubtasks(evt) { this.subtaskCount = evt.target.value; },
+      setFailRate(evt) { this.failRate = evt.target.value; },
+      runNow() { this.$store.demo.runNow(); },
+      schedule() { this.$store.demo.schedule(Number(this.delaySeconds)); },
+      runBatch() {
+        this.$store.demo.runBatch(Number(this.subtaskCount), Number(this.failRate));
+      },
+    }));
+
+    Alpine.data("demoJobs", () => ({
+      get jobs() { return this.$store.demo.jobs; },
+      get empty() { return !this.$store.demo.jobs.length; },
+      cancel(evt) { this.$store.demo.cancel(evt.currentTarget.dataset.id); },
+      remove(evt) { this.$store.demo.remove(evt.currentTarget.dataset.id); },
+    }));
+  });
+</script>
+{% endscript %}

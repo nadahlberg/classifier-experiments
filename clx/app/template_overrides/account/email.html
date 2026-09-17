@@ -1,0 +1,50 @@
+{% extends "layouts/card.html" %}
+
+{% block title %}Email addresses{% endblock %}
+
+{% block card %}
+<div class="card w-full max-w-md">
+  <h1 class="text-2xl font-semibold tracking-tight">Email addresses</h1>
+
+  {% if emailaddresses %}
+    <p class="mt-1 text-sm text-muted-foreground">The addresses associated with your account.</p>
+    <form method="post" action="{% url 'account_email' %}" class="mt-6">
+      {% csrf_token %}
+      <div class="space-y-2">
+        {% for radio in emailaddress_radios %}
+          {% with emailaddress=radio.emailaddress %}
+            <label for="{{ radio.id }}" class="flex cursor-pointer items-center gap-3 rounded-control border border-border px-4 py-3 transition hover:bg-accent">
+              <input type="radio" name="email" id="{{ radio.id }}" value="{{ emailaddress.email }}" {% if radio.checked %}checked{% endif %} class="h-4 w-4 shrink-0 accent-primary">
+              <span class="min-w-0 flex-1 truncate text-sm text-foreground">{{ emailaddress.email }}</span>
+              {% if emailaddress.primary %}
+                <span class="shrink-0 rounded-full bg-inverse-surface px-2 py-0.5 text-xs font-medium text-white">Primary</span>
+              {% endif %}
+              {% if emailaddress.verified %}
+                <span class="shrink-0 rounded-full bg-success-soft px-2 py-0.5 text-xs font-medium text-success-soft-foreground">Verified</span>
+              {% else %}
+                <span class="shrink-0 rounded-full bg-warning-soft px-2 py-0.5 text-xs font-medium text-warning-soft-foreground">Unverified</span>
+              {% endif %}
+            </label>
+          {% endwith %}
+        {% endfor %}
+      </div>
+      <div class="mt-4 flex flex-wrap gap-2">
+        <button type="submit" name="action_primary" class="btn-outline">Make primary</button>
+        <button type="submit" name="action_send" class="btn-outline">Re-send verification</button>
+        <button type="submit" name="action_remove" class="btn-outline">Remove</button>
+      </div>
+    </form>
+  {% else %}
+    <p class="mt-1 text-sm text-muted-foreground">You don't have any email address set up.</p>
+  {% endif %}
+
+  {% if can_add_email %}
+    <h2 class="mt-8 text-sm font-medium text-foreground">Add email address</h2>
+    <form method="post" action="{% url 'account_email' %}" class="mt-4 space-y-5">
+      {% csrf_token %}
+      <c-account.fields />
+      <button type="submit" name="action_add" class="btn w-full">Add email</button>
+    </form>
+  {% endif %}
+</div>
+{% endblock %}

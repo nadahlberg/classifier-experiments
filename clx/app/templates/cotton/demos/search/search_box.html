@@ -1,0 +1,41 @@
+<label x-data="docketSearchBox" class="relative block">
+  <span class="sr-only">Search dockets</span>
+  <svg class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="11" cy="11" r="7" />
+    <path d="m20 20-3.5-3.5" />
+  </svg>
+  <input
+    type="search"
+    placeholder="Search dockets…"
+    class="w-full pl-9 pr-8"
+    :value="$store.docketSearch.query"
+    @input="setQuery"
+  >
+  <button
+    type="button"
+    x-show="$store.docketSearch.hasQuery"
+    x-cloak
+    @click="clear"
+    aria-label="Clear search"
+    class="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-muted-foreground transition hover:bg-accent hover:text-foreground"
+  >
+    <svg class="h-3.5 w-3.5" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+      <path d="M3.5 3.5l7 7m0-7l-7 7" />
+    </svg>
+  </button>
+</label>
+
+{% script %}
+<script>
+  document.addEventListener("alpine:init", () => {
+    Alpine.data("docketSearchBox", () => ({
+      setQuery(evt) {
+        this.$store.docketSearch.setQuery(evt);
+      },
+      clear() {
+        this.$store.docketSearch.clearQuery();
+      },
+    }));
+  });
+</script>
+{% endscript %}

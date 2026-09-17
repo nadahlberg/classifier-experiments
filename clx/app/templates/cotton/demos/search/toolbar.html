@@ -1,0 +1,25 @@
+<div x-data="docketSearchToolbar" class="flex shrink-0 items-center gap-3">
+  <p x-show="$store.docketSearch.countsSettled" class="text-xs text-muted-foreground" x-text="$store.docketSearch.countLabel"></p>
+  <select
+    class="w-36 text-xs"
+    aria-label="Sort results"
+    :value="$store.docketSearch.sort"
+    @change="setSort"
+  >
+    <option value="relevance">Relevance</option>
+    <option value="newest">Newest first</option>
+    <option value="oldest">Oldest first</option>
+  </select>
+</div>
+
+{% script %}
+<script>
+  document.addEventListener("alpine:init", () => {
+    Alpine.data("docketSearchToolbar", () => ({
+      setSort(evt) {
+        this.$store.docketSearch.setSort(evt);
+      },
+    }));
+  });
+</script>
+{% endscript %}
