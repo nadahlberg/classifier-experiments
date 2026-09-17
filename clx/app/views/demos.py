@@ -48,12 +48,6 @@ def markdown(request: HttpRequest) -> HttpResponse:
 
 
 @login_required
-def components(request: HttpRequest) -> HttpResponse:
-    """Components library demo page."""
-    return render(request, "pages/demos/components.html")
-
-
-@login_required
 def search(request: HttpRequest) -> HttpResponse:
     """Search demo page."""
     return render(request, "pages/demos/search.html")

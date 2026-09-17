@@ -497,7 +497,7 @@ it renders nothing, and the browser only ever sees `static/js/main.js`.
 The design system is a set of **semantic tokens** defined in the `@theme`
 blocks of `clx/app/src/main.css`. Templates use roles, never raw palette
 colors — `bg-primary`, not `bg-gray-900`. Everything below the tokens follows
-from them, and `/demos/components/` renders the whole theme at a glance, so it
+from them, and `/components/` renders the whole theme at a glance, so it
 is the visual smoke test after any theme change.
 
 ### Color roles
@@ -583,7 +583,7 @@ Everything a rebrand touches, in one pass:
 5. Hardcoded hex that CSS variables cannot reach: `theme-color` meta in
    `base.html`, `background_color`/`theme_color` in `manifest.webmanifest`
    (match them to `background` / `inverse-surface`).
-6. Load `/demos/components/` and review every token and primitive at once.
+6. Load `/components/` and review every token and primitive at once.
 
 ## MCP
 
