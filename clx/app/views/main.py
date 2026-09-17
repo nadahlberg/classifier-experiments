@@ -12,3 +12,9 @@ def index(request: HttpRequest) -> HttpResponse:
 def profile(request: HttpRequest) -> HttpResponse:
     """Profile page."""
     return render(request, "pages/profile.html")
+
+
+@login_required
+def components(request: HttpRequest) -> HttpResponse:
+    """Components library page."""
+    return render(request, "pages/components.html")

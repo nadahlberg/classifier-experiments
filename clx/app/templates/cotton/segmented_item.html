@@ -1,0 +1,9 @@
+<c-vars active="" />
+
+<button
+  type="button"
+  {% if active %}aria-pressed="true"{% else %}aria-pressed="false"{% endif %}
+  {{ attrs }}
+  class="h-8 rounded-[7px] px-3 text-xs transition
+    {% if active %}bg-surface font-medium text-foreground shadow-card{% else %}text-muted-foreground hover:text-foreground{% endif %}"
+>{{ slot }}</button>

@@ -1,75 +1,143 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: "Instrument Serif";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("fonts/instrument-serif-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "Instrument Serif";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("fonts/instrument-serif-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+  font-family: "Instrument Serif";
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url("fonts/instrument-serif-italic-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "Instrument Serif";
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url("fonts/instrument-serif-italic-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+  font-family: "DM Sans";
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url("fonts/dm-sans-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "DM Sans";
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url("fonts/dm-sans-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+  font-family: "JetBrains Mono";
+  font-style: normal;
+  font-weight: 400 500;
+  font-display: swap;
+  src: url("fonts/jetbrains-mono-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "JetBrains Mono";
+  font-style: normal;
+  font-weight: 400 500;
+  font-display: swap;
+  src: url("fonts/jetbrains-mono-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
 /* Theme — the rebrand surface. Roles, not raw colors, everywhere else.
    See the Theming section in CLAUDE.md. */
 
 @theme {
   --font-sans:
-    ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
+    "DM Sans", "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji",
     "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-display: "Instrument Serif", Georgia, "Times New Roman", serif;
   --font-mono:
-    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
-    "Courier New", monospace;
+    "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas,
+    "Liberation Mono", monospace;
 
-  --radius-control: 0.5rem;
+  --radius-control: 0.625rem;
   --radius-surface: 1rem;
 
-  --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-  --shadow-card-hover:
-    0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-card: 0 1px 2px 0 rgb(23 22 26 / 0.04);
+  --shadow-card-hover: 0 8px 30px 0 rgb(23 22 26 / 0.06);
 
   --spacing-nav: 3.5rem;
   --container-shell: 96rem;
-}
 
-@theme inline {
-  --font-display: var(--font-sans);
+  --color-primary: #17161a;
+  --color-primary-hover: #2a2930;
+  --color-primary-foreground: #f4f1ea;
 
-  --color-primary: var(--color-gray-900);
-  --color-primary-hover: var(--color-gray-800);
-  --color-primary-foreground: var(--color-white);
+  --color-secondary: #3038d8;
+  --color-secondary-hover: #2830b8;
+  --color-secondary-foreground: #ffffff;
 
-  --color-secondary: var(--color-gray-900);
-  --color-secondary-hover: var(--color-gray-800);
-  --color-secondary-foreground: var(--color-white);
+  --color-accent: #ece8df;
+  --color-accent-foreground: #4a4852;
 
-  --color-accent: var(--color-gray-50);
-  --color-accent-foreground: var(--color-gray-700);
+  --color-background: #f4f1ea;
+  --color-surface: #ffffff;
+  --color-muted: #ece8df;
+  --color-muted-foreground: #5c5a63;
+  --color-foreground: #17161a;
 
-  --color-background: var(--color-white);
-  --color-surface: var(--color-white);
-  --color-muted: var(--color-gray-50);
-  --color-muted-foreground: var(--color-gray-500);
-  --color-foreground: var(--color-gray-900);
+  --color-border: #e3dfd5;
+  --color-border-strong: #d6d1c4;
+  --color-ring: #3038d8;
 
-  --color-border: var(--color-gray-200);
-  --color-border-strong: var(--color-gray-300);
-  --color-ring: var(--color-gray-900);
+  --color-inverse-surface: #17161a;
+  --color-inverse-foreground: #f4f1ea;
+  --color-inverse-muted: #b8b4a8;
 
-  --color-inverse-surface: var(--color-gray-900);
-  --color-inverse-foreground: var(--color-white);
-  --color-inverse-muted: var(--color-gray-400);
+  --color-success: #1f7a6d;
+  --color-success-foreground: #ffffff;
+  --color-success-soft: #e8f5f2;
+  --color-success-soft-foreground: #176f63;
 
-  --color-success: var(--color-emerald-600);
-  --color-success-foreground: var(--color-white);
-  --color-success-soft: var(--color-emerald-50);
-  --color-success-soft-foreground: var(--color-emerald-700);
+  --color-warning: #8f6b0f;
+  --color-warning-foreground: #ffffff;
+  --color-warning-soft: #fbf3e0;
+  --color-warning-soft-foreground: #6b5309;
 
-  --color-warning: var(--color-amber-600);
-  --color-warning-foreground: var(--color-white);
-  --color-warning-soft: var(--color-amber-50);
-  --color-warning-soft-foreground: var(--color-amber-700);
+  --color-danger: #c24a31;
+  --color-danger-hover: #b4432a;
+  --color-danger-foreground: #ffffff;
+  --color-danger-soft: #fbede8;
+  --color-danger-soft-foreground: #b4432a;
 
-  --color-danger: var(--color-red-600);
-  --color-danger-hover: var(--color-red-500);
-  --color-danger-foreground: var(--color-white);
-  --color-danger-soft: var(--color-red-50);
-  --color-danger-soft-foreground: var(--color-red-700);
-
-  --color-info: var(--color-blue-600);
-  --color-info-foreground: var(--color-white);
-  --color-info-soft: var(--color-blue-50);
-  --color-info-soft-foreground: var(--color-blue-700);
+  --color-info: #3038d8;
+  --color-info-foreground: #ffffff;
+  --color-info-soft: #eef0fd;
+  --color-info-soft-foreground: #3038d8;
 }
 
 @layer base {
@@ -119,11 +187,11 @@
   }
 
   .btn {
-    @apply inline-flex items-center justify-center rounded-control bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition hover:bg-primary-hover disabled:pointer-events-none disabled:opacity-50;
+    @apply inline-flex items-center justify-center whitespace-nowrap rounded-control bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition hover:bg-primary-hover disabled:pointer-events-none disabled:opacity-50;
   }
 
   .btn-outline {
-    @apply inline-flex items-center justify-center rounded-control border border-border px-4 py-2.5 text-sm font-medium text-foreground transition hover:bg-accent disabled:pointer-events-none disabled:opacity-50;
+    @apply inline-flex items-center justify-center whitespace-nowrap rounded-control border border-border px-4 py-2.5 text-sm font-medium text-foreground transition hover:bg-accent disabled:pointer-events-none disabled:opacity-50;
   }
 
   .content {
@@ -143,7 +211,7 @@
   }
 
   .content h1 {
-    @apply font-display text-2xl;
+    @apply font-display text-3xl font-normal tracking-normal;
     margin-top: var(--prose-heading-gap);
   }
 

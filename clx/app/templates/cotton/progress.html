@@ -1,0 +1,28 @@
+<c-vars value="0" color="" size="md" />
+
+<div
+  x-data="progress"
+  data-value="{{ value }}"
+  data-color="{{ color }}"
+  role="progressbar"
+  aria-valuemin="0"
+  aria-valuemax="100"
+  aria-valuenow="{{ value }}"
+  class="w-full overflow-hidden rounded-full bg-muted {% if size == 'sm' %}h-1{% else %}h-1.5{% endif %}"
+>
+  <div x-ref="fill" class="h-full w-0 rounded-full bg-primary transition-[width]"></div>
+</div>
+
+{% script %}
+<script>
+  document.addEventListener("alpine:init", () => {
+    Alpine.data("progress", () => ({
+      init() {
+        const fill = this.$refs.fill;
+        fill.style.width = Math.min(100, Math.max(0, Number(this.$el.dataset.value) || 0)) + "%";
+        if (this.$el.dataset.color) fill.style.backgroundColor = this.$el.dataset.color;
+      },
+    }));
+  });
+</script>
+{% endscript %}

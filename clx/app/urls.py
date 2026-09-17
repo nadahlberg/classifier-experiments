@@ -13,6 +13,7 @@ from clx.app.views import admin, demos, main
 main_view_patterns = [
     path("", main.index, name="index"),
     path("profile/", main.profile, name="profile"),
+    path("components/", main.components, name="components"),
 ]
 
 demos_view_patterns = [
@@ -20,7 +21,6 @@ demos_view_patterns = [
     path("celery/", demos.celery, name="demos-celery"),
     path("uploads/", demos.uploads, name="demos-uploads"),
     path("markdown/", demos.markdown, name="demos-markdown"),
-    path("components/", demos.components, name="demos-components"),
     path("api/", demos.api, name="demos-api"),
     path("search/", demos.search, name="demos-search"),
 ]

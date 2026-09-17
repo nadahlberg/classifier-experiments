@@ -51,7 +51,7 @@ def test_settings_update_requires_the_admin_permission() -> None:
     )
 
     assert response.status_code == 403
-    assert site_config_get().site_name == "Classifier Experiments"
+    assert site_config_get().site_name == "CLX"
 
     anonymous = Client().post(
         "/api/admin/settings/",
@@ -81,7 +81,7 @@ def test_settings_update_rejects_a_blank_site_name(admin_user: User) -> None:
 
     assert response.status_code == 400
     assert "site_name" in response.json()["extra"]["fields"]
-    assert site_config_get().site_name == "Classifier Experiments"
+    assert site_config_get().site_name == "CLX"
 
 
 @pytest.mark.django_db

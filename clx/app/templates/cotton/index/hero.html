@@ -1,0 +1,10 @@
+<section class="relative flex h-[calc(100dvh-var(--spacing-nav))] flex-col items-center justify-center overflow-hidden px-4 text-center">
+  <div class="absolute inset-0 -z-10 bg-[linear-gradient(to_right,color-mix(in_oklab,var(--color-foreground)_5%,transparent)_1px,transparent_1px),linear-gradient(to_bottom,color-mix(in_oklab,var(--color-foreground)_5%,transparent)_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_70%_70%_at_50%_40%,black,transparent)]"></div>
+  <div class="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_60%_40%_at_50%_0%,color-mix(in_oklab,var(--color-secondary)_8%,transparent),transparent)]"></div>
+  <c-eyebrow>Docket classification</c-eyebrow>
+  <h1 class="mt-5 max-w-4xl font-display text-5xl leading-[1.02] text-foreground sm:text-7xl">Label the dockets. <em class="text-muted-foreground">Let the model learn the rest.</em></h1>
+  <p class="mt-7 max-w-xl text-lg leading-8 text-muted-foreground">A workbench for docket classification pipelines: annotate entries, train on the labels, and measure the model against the people who made them.</p>
+  <div class="mt-10 flex items-center gap-4">
+    <a href="{% url 'demos' %}" class="btn px-5 py-3 text-base">Get started</a>
+  </div>
+</section>
