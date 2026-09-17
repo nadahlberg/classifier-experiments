@@ -1,0 +1,19 @@
+{
+  "base": {
+    "sha": "0f656dea35ffd8909a0229e8ed6fd63e26886bcd",
+    "source": "last-touched",
+    "approximate": true
+  },
+  "last_refreshed": "2026-08-21T00:00:00Z",
+  "last_run": "2026-08-21",
+  "prs": [
+    {
+      "number": 113,
+      "sha": "37fc7c3bcad0f576228861437bda65e8e110fd9f",
+      "title": "fix(chat): put cost and tokens left of a small usage bar",
+      "merged_at": "2026-08-21T00:13:49-04:00",
+      "status": "no-impact",
+      "note": "A chat composer layout fix plus a new E504 alpine check; no guide names checks/alpine.py or the chat cotton templates it touched, and the CLAUDE.md paragraph it added sits in the CSP/Alpine section no feature strips."
+    }
+  ]
+}

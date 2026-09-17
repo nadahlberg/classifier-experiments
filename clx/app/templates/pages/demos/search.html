@@ -1,0 +1,23 @@
+{% extends "layouts/three_panel.html" %}
+
+{% block title %}Search demo{% endblock %}
+
+{% block left %}
+<c-demos.search.search-box />
+<div class="mt-6">
+  <c-demos.search.filters />
+</div>
+{% endblock %}
+
+{% block toolbar %}
+<p class="min-w-0 truncate text-sm font-medium text-foreground">Docket search</p>
+<c-demos.search.toolbar />
+{% endblock %}
+
+{% block center %}
+<c-demos.search.results />
+{% endblock %}
+
+{% block right %}
+<c-demos.import-data />
+{% endblock %}

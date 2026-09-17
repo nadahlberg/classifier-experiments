@@ -1,0 +1,11 @@
+{% extends "layouts/card.html" %}
+
+{% block title %}Account inactive{% endblock %}
+
+{% block card %}
+<div class="card w-full max-w-md text-center">
+  <h1 class="text-2xl font-semibold tracking-tight">Account inactive</h1>
+  <p class="mt-2 text-sm text-muted-foreground">This account has been deactivated. Contact support if you think this is a mistake.</p>
+  <a href="{% url 'index' %}" class="btn-outline mt-6">Go home</a>
+</div>
+{% endblock %}

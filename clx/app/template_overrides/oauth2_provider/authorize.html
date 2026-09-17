@@ -1,0 +1,55 @@
+{% extends "layouts/card.html" %}
+
+{% block title %}Authorize{% endblock %}
+
+{% block card %}
+<div class="card w-full max-w-md">
+  {% if not error %}
+    <h1 class="text-xl font-semibold tracking-tight">
+      Authorize {{ application.name }}
+    </h1>
+    <p class="mt-1 text-sm text-muted-foreground">
+      Signed in as {{ user.email }}
+    </p>
+
+    <p class="mt-6 text-sm font-medium text-foreground">
+      This application is requesting:
+    </p>
+    <ul class="mt-2 space-y-1">
+      {% for scope in scopes_descriptions %}
+        <li class="flex gap-2 text-sm text-accent-foreground">
+          <span aria-hidden="true" class="text-muted-foreground">&bull;</span>
+          <span>{{ scope }}</span>
+        </li>
+      {% endfor %}
+    </ul>
+
+    <form method="post" class="mt-8">
+      {% csrf_token %}
+      {% for field in form %}
+        {% if field.is_hidden %}{{ field }}{% endif %}
+      {% endfor %}
+
+      {% if form.errors or form.non_field_errors %}
+        <div class="mb-4 rounded-control border border-danger/25 bg-danger-soft px-4 py-2 text-sm text-danger-soft-foreground">
+          {{ form.non_field_errors }}
+          {{ form.errors }}
+        </div>
+      {% endif %}
+
+      <div class="flex gap-3">
+        <button type="submit" name="allow" value="Authorize" class="btn flex-1">
+          Authorize
+        </button>
+        <button type="submit" class="btn-outline flex-1">
+          Cancel
+        </button>
+      </div>
+    </form>
+  {% else %}
+    <h1 class="text-xl font-semibold tracking-tight">{{ error.error }}</h1>
+    <p class="mt-2 text-sm text-muted-foreground">{{ error.description }}</p>
+    <a href="{% url 'index' %}" class="btn-outline mt-6">Back</a>
+  {% endif %}
+</div>
+{% endblock %}

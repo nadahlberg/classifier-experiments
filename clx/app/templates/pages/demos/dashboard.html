@@ -1,0 +1,23 @@
+{% extends "layouts/three_panel.html" %}
+
+{% block left %}
+<p class="text-sm font-medium text-foreground">Left</p>
+<div class="mt-4 h-[150vh] rounded-control bg-muted"></div>
+{% endblock %}
+
+{% block toolbar %}
+<p class="min-w-0 truncate text-sm font-medium text-foreground">Center</p>
+<div class="flex shrink-0 items-center gap-1">
+  <button type="button" class="rounded-md px-2.5 py-1.5 text-sm text-accent-foreground transition hover:bg-accent">Button 1</button>
+  <button type="button" class="rounded-md px-2.5 py-1.5 text-sm text-accent-foreground transition hover:bg-accent">Button 2</button>
+</div>
+{% endblock %}
+
+{% block center %}
+<div class="h-[300vh] rounded-control bg-muted"></div>
+{% endblock %}
+
+{% block right %}
+<p class="text-sm font-medium text-foreground">Right</p>
+<div class="mt-4 h-[200vh] rounded-control bg-muted"></div>
+{% endblock %}

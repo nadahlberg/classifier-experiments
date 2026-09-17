@@ -1,0 +1,35 @@
+{% extends "layouts/card.html" %}
+
+{% block title %}Confirm email{% endblock %}
+
+{% block card %}
+{% if confirmation and can_confirm %}
+  <div class="card w-full max-w-md text-center">
+    <h1 class="text-2xl font-semibold tracking-tight">Confirm email</h1>
+    <p class="mt-2 text-sm text-muted-foreground">
+      Confirm that <span class="font-medium text-foreground">{{ email }}</span> belongs to you.
+    </p>
+    <form method="post" action="{% url 'account_confirm_email' confirmation.key %}" class="mt-6">
+      {% csrf_token %}
+      {{ redirect_field }}
+      <button type="submit" class="btn w-full">Confirm</button>
+    </form>
+  </div>
+{% elif confirmation %}
+  <div class="card w-full max-w-md text-center">
+    <h1 class="text-2xl font-semibold tracking-tight">Already confirmed</h1>
+    <p class="mt-2 text-sm text-muted-foreground">
+      {{ email }} is already confirmed by a different account.
+    </p>
+    <a href="{% url 'account_login' %}" class="btn-outline mt-6">Back to sign in</a>
+  </div>
+{% else %}
+  <div class="card w-full max-w-md text-center">
+    <h1 class="text-2xl font-semibold tracking-tight">Invalid link</h1>
+    <p class="mt-2 text-sm text-muted-foreground">
+      This confirmation link has expired or has already been used.
+    </p>
+    <a href="{% url 'account_login' %}" class="btn mt-6">Sign in to get a new link</a>
+  </div>
+{% endif %}
+{% endblock %}

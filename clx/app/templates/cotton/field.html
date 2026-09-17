@@ -1,0 +1,19 @@
+<c-vars label="" name="" type="text" placeholder="" value="" help="" error="" />
+
+<div class="space-y-1.5">
+  {% if label %}<label for="id_{{ name }}" class="block text-sm font-medium text-accent-foreground">{{ label }}</label>{% endif %}
+  <input
+    type="{{ type }}"
+    name="{{ name }}"
+    id="id_{{ name }}"
+    {% if placeholder %}placeholder="{{ placeholder }}"{% endif %}
+    {% if value %}value="{{ value }}"{% endif %}
+    {{ attrs }}
+    {% if error %}class="border-danger/40 focus:border-danger focus:ring-danger"{% endif %}
+  >
+  {% if error %}
+    <p class="text-sm text-danger">{{ error }}</p>
+  {% elif help %}
+    <p class="text-sm text-muted-foreground">{{ help }}</p>
+  {% endif %}
+</div>

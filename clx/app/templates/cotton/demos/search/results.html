@@ -1,0 +1,226 @@
+<div
+  x-data="docketSearchResults"
+  data-url="{% url 'demos-docket-search' %}"
+  data-facets-url="{% url 'demos-docket-facets' %}"
+  class="mx-auto flex min-h-full max-w-3xl flex-col"
+>
+  <p x-show="$store.docketSearch.error" x-cloak class="mb-4 text-sm text-danger" x-text="$store.docketSearch.error"></p>
+
+  <div x-show="$store.docketSearch.showSpinner" x-cloak class="flex justify-center py-16">
+    <c-spinner size="lg" />
+  </div>
+
+  <div x-show="$store.docketSearch.empty" x-cloak class="rounded-surface border border-dashed border-border p-10 text-center">
+    <p class="text-sm font-medium text-foreground">No dockets match</p>
+    <p class="mx-auto mt-2 max-w-md text-sm leading-6 text-muted-foreground">
+      Try a different query or clear the filters — or import the sample
+      data from the panel on the right if the index is empty.
+    </p>
+  </div>
+
+  <div class="flex-1 space-y-3" x-show="$store.docketSearch.hasResults">
+    <template x-for="hit in $store.docketSearch.results" :key="hit.id">
+      <c-demos.search.result-card />
+    </template>
+  </div>
+
+  <div x-show="$store.docketSearch.hasResults" x-cloak class="mt-6 flex items-center justify-between border-t border-border pt-4">
+    <p class="text-xs text-muted-foreground" x-text="$store.docketSearch.rangeLabel"></p>
+    <div class="flex gap-2">
+      <button type="button" class="btn-outline px-3 py-1.5 text-xs" @click="prevPage" :disabled="$store.docketSearch.prevDisabled">Previous</button>
+      <button type="button" class="btn-outline px-3 py-1.5 text-xs" @click="nextPage" :disabled="$store.docketSearch.nextDisabled">Next</button>
+    </div>
+  </div>
+</div>
+
+{% script %}
+<script>
+  document.addEventListener("alpine:init", () => {
+    Alpine.store("docketSearch", {
+      url: "",
+      facetsUrl: "",
+      started: false,
+      timer: null,
+      query: "",
+      sort: "relevance",
+      jurisdiction: "",
+      juryDemand: "",
+      results: [],
+      facets: { jurisdiction: [], jury_demand: [] },
+      options: { jurisdiction: [], jury_demand: [] },
+      rawFacets: { jurisdiction: [], jury_demand: [] },
+      total: 0,
+      pageSize: 30,
+      cursor: "",
+      stack: [],
+      next: "",
+      busy: false,
+      loaded: false,
+      error: "",
+      ticket: 0,
+      start(config) {
+        if (this.started) return;
+        this.started = true;
+        this.url = config.url;
+        this.facetsUrl = config.facetsUrl;
+        this.fetchOptions();
+        this.fetch();
+      },
+      async fetchOptions() {
+        try {
+          const response = await api(this.facetsUrl, { method: "GET" });
+          this.options = response.facets;
+          this.refreshFacets();
+        } catch (error) {
+          this.error = error.message;
+        }
+      },
+      async fetch() {
+        const ticket = ++this.ticket;
+        this.busy = true;
+        this.error = "";
+        const params = new URLSearchParams();
+        if (this.query) params.set("q", this.query);
+        if (this.jurisdiction) params.set("jurisdiction", this.jurisdiction);
+        if (this.juryDemand) params.set("jury_demand", this.juryDemand);
+        params.set("sort", this.sort);
+        if (this.cursor) params.set("cursor", this.cursor);
+        try {
+          const response = await api(`${this.url}?${params}`, { method: "GET" });
+          if (ticket !== this.ticket) return;
+          this.results = response.results;
+          this.total = response.total;
+          this.next = response.next;
+          this.pageSize = response.page_size;
+          this.rawFacets = response.facets;
+          this.refreshFacets();
+          this.loaded = true;
+        } catch (error) {
+          if (ticket !== this.ticket) return;
+          this.error = error.message;
+        }
+        this.busy = false;
+      },
+      refreshFacets() {
+        this.facets = {
+          jurisdiction: this.decorate("jurisdiction", this.jurisdiction, this.options.jurisdiction, this.rawFacets.jurisdiction),
+          jury_demand: this.decorate("jury_demand", this.juryDemand, this.options.jury_demand, this.rawFacets.jury_demand),
+        };
+      },
+      decorate(facet, selected, options, buckets) {
+        const base = "flex w-full items-center justify-between gap-2 rounded-control px-2.5 py-1.5 text-left text-sm transition";
+        const counts = {};
+        (buckets || []).forEach((bucket) => {
+          counts[bucket.value] = bucket.count;
+        });
+        return (options || []).map((option) => ({
+          facet,
+          value: option.value,
+          label: option.value,
+          countLabel: (counts[option.value] || 0).toLocaleString(),
+          cssClass: option.value === selected
+            ? `${base} bg-primary font-medium text-primary-foreground`
+            : `${base} text-accent-foreground hover:bg-accent`,
+        }));
+      },
+      reset() {
+        this.cursor = "";
+        this.stack = [];
+      },
+      setQuery(evt) {
+        this.query = evt.target.value;
+        clearTimeout(this.timer);
+        this.timer = setTimeout(() => {
+          this.reset();
+          this.fetch();
+        }, 300);
+      },
+      clearQuery() {
+        this.query = "";
+        clearTimeout(this.timer);
+        this.reset();
+        this.fetch();
+      },
+      setSort(evt) {
+        this.sort = evt.target.value;
+        this.reset();
+        this.fetch();
+      },
+      toggleFacet(evt) {
+        const { facet, value } = evt.currentTarget.dataset;
+        const key = facet === "jurisdiction" ? "jurisdiction" : "juryDemand";
+        this[key] = this[key] === value ? "" : value;
+        this.refreshFacets();
+        this.reset();
+        this.fetch();
+      },
+      clearFilters() {
+        this.jurisdiction = "";
+        this.juryDemand = "";
+        this.refreshFacets();
+        this.reset();
+        this.fetch();
+      },
+      nextPage() {
+        if (!this.next) return;
+        this.stack.push(this.cursor);
+        this.cursor = this.next;
+        this.fetch();
+      },
+      prevPage() {
+        if (!this.stack.length) return;
+        this.cursor = this.stack.pop();
+        this.fetch();
+      },
+      get countLabel() {
+        if (!this.loaded) return "";
+        return this.total === 1 ? "1 result" : `${this.total.toLocaleString()} results`;
+      },
+      get countsSettled() {
+        return !this.busy && this.loaded;
+      },
+      get rangeLabel() {
+        if (!this.results.length) return "";
+        const start = this.stack.length * this.pageSize + 1;
+        const end = start + this.results.length - 1;
+        return `Showing ${start.toLocaleString()}–${end.toLocaleString()} of ${this.total.toLocaleString()}`;
+      },
+      get hasResults() {
+        return this.results.length > 0 && !this.busy;
+      },
+      get empty() {
+        return this.loaded && !this.busy && this.results.length === 0;
+      },
+      get showSpinner() {
+        return this.busy;
+      },
+      get prevDisabled() {
+        return this.stack.length === 0;
+      },
+      get nextDisabled() {
+        return this.next === "";
+      },
+      get hasFilters() {
+        return this.jurisdiction !== "" || this.juryDemand !== "";
+      },
+      get hasQuery() {
+        return this.query !== "";
+      },
+    });
+
+    Alpine.data("docketSearchResults", () => ({
+      init() {
+        this.$store.docketSearch.start(this.$el.dataset);
+      },
+      nextPage() {
+        this.$store.docketSearch.nextPage();
+        this.$root.scrollIntoView({ block: "start" });
+      },
+      prevPage() {
+        this.$store.docketSearch.prevPage();
+        this.$root.scrollIntoView({ block: "start" });
+      },
+    }));
+  });
+</script>
+{% endscript %}

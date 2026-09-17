@@ -1,0 +1,32 @@
+<c-vars label="" name="" checked="" />
+
+<div x-data="toggle" data-checked="{{ checked|yesno:'true,false' }}" class="flex items-center gap-3">
+  <button
+    type="button"
+    role="switch"
+    :aria-checked="on"
+    {% if label %}aria-label="{{ label }}"{% endif %}
+    @click="flip"
+    :class="trackClass"
+    class="relative h-6 w-11 shrink-0 rounded-full transition-colors"
+  >
+    <span :class="knobClass" class="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-surface shadow-sm transition-transform"></span>
+  </button>
+  {% if name %}<input type="hidden" name="{{ name }}" :value="value">{% endif %}
+  {% if label %}<span @click="flip" class="cursor-pointer text-sm text-accent-foreground">{{ label }}</span>{% endif %}
+</div>
+
+{% script %}
+<script>
+  document.addEventListener("alpine:init", () => {
+    Alpine.data("toggle", () => ({
+      on: false,
+      init() { this.on = this.$el.dataset.checked === "true"; },
+      flip() { this.on = !this.on; },
+      get trackClass() { return this.on ? "bg-primary" : "bg-border"; },
+      get knobClass() { return this.on ? "translate-x-5" : "translate-x-0"; },
+      get value() { return this.on ? "on" : ""; },
+    }));
+  });
+</script>
+{% endscript %}

@@ -1,0 +1,67 @@
+<div x-data="chatToolbar" class="flex min-w-0 flex-1 items-center justify-between gap-3">
+  <div class="flex min-w-0 items-center gap-2">
+    <p x-show="notRenaming" class="min-w-0 truncate text-sm font-medium text-foreground" x-text="title"></p>
+    <input
+      x-show="renaming"
+      x-cloak
+      type="text"
+      :value="renameDraft"
+      @input="setRenameDraft"
+      @keydown.enter="submitRename"
+      @keydown.escape="cancelRename"
+      @click.outside="cancelRename"
+      aria-label="Thread title"
+      class="w-56 text-sm"
+    >
+    <span x-show="isPending" x-cloak><c-badge>Queued</c-badge></span>
+    <span x-show="isRunning" x-cloak><c-badge color="warning">Responding</c-badge></span>
+    <span x-show="isFailed" x-cloak><c-badge color="danger">Failed</c-badge></span>
+  </div>
+  <div x-show="hasThread" x-cloak class="flex shrink-0 items-center gap-1">
+    <button type="button" @click="startRename" aria-label="Rename thread" class="rounded-md p-1.5 text-muted-foreground transition hover:bg-accent hover:text-foreground">
+      <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z" />
+      </svg>
+    </button>
+    <button type="button" @click="remove" aria-label="Delete thread" class="rounded-md px-2 py-1.5 text-xs text-muted-foreground transition hover:bg-accent hover:text-danger" x-text="deleteLabel"></button>
+  </div>
+</div>
+
+{% script %}
+<script>
+  document.addEventListener("alpine:init", () => {
+    Alpine.data("chatToolbar", () => ({
+      renaming: false,
+      renameDraft: "",
+      deleteArmed: false,
+      get notRenaming() { return !this.renaming; },
+      get title() { return this.$store.chat.title || "New chat"; },
+      get hasThread() { return this.$store.chat.hasThread; },
+      get isPending() { return this.$store.chat.status === "pending"; },
+      get isRunning() { return this.$store.chat.status === "running"; },
+      get isFailed() { return this.$store.chat.failed; },
+      get deleteLabel() { return this.deleteArmed ? "Sure?" : "Delete"; },
+      startRename() {
+        this.renameDraft = this.$store.chat.title;
+        this.renaming = true;
+      },
+      setRenameDraft(evt) { this.renameDraft = evt.target.value; },
+      submitRename() {
+        const title = this.renameDraft.trim();
+        if (title) this.$store.chat.rename(title);
+        this.renaming = false;
+      },
+      cancelRename() { this.renaming = false; },
+      remove() {
+        if (!this.deleteArmed) {
+          this.deleteArmed = true;
+          setTimeout(() => { this.deleteArmed = false; }, 2500);
+          return;
+        }
+        this.deleteArmed = false;
+        this.$store.chat.removeThread();
+      },
+    }));
+  });
+</script>
+{% endscript %}

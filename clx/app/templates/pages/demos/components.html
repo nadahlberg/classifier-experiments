@@ -1,0 +1,630 @@
+{% extends "layouts/content.html" %}
+{% load static %}
+
+{% block title %}Components{% endblock %}
+
+{% block nav %}<c-nav />{% endblock %}
+
+{% block heading %}Components{% endblock %}
+
+{% block subheading %}
+The theme and the design system's primitives — every token and reusable piece
+of interface, rendered live.
+{% endblock %}
+
+{% block sections %}
+<h2 id="overview">Overview</h2>
+<p>
+  Every reusable piece of markup in this project is a cotton component.
+  <code>&lt;c-name /&gt;</code> resolves to <code>cotton/name.html</code>, dots
+  are folders, and hyphens become underscores. Components at the root of
+  <code>cotton/</code> are the design-system primitives documented here;
+  anything nested deeper is feature furniture that belongs to one surface.
+</p>
+<p>
+  Each primitive declares its interface with <code>&lt;c-vars&gt;</code>, so
+  every attribute shown below has a default and can be omitted. Attributes the
+  component does not declare — Alpine handlers like <code>@click</code>,
+  <code>aria-*</code>, anything — pass straight through to the underlying
+  element.
+</p>
+
+<h2 id="theme">Theme</h2>
+<p>
+  The design tokens: every color, font, radius, and shadow in the app,
+  defined once in the <code>@theme</code> blocks of <code>src/main.css</code>.
+</p>
+
+<h3 id="colors">Colors</h3>
+<p>
+  Every color in the app is one of these roles, defined once in the
+  <code>@theme</code> block of <code>src/main.css</code>. Templates never use
+  raw palette colors — rebranding means re-pointing the roles and everything
+  below follows.
+</p>
+<c-components.example>
+  <div class="w-full space-y-8">
+    <div>
+      <p class="text-xs font-medium uppercase tracking-wide text-muted-foreground">Core</p>
+      <div class="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+        <c-components.swatch label="primary" bg="bg-primary" />
+        <c-components.swatch label="primary-hover" bg="bg-primary-hover" />
+        <c-components.swatch label="primary-foreground" bg="bg-primary-foreground" />
+        <c-components.swatch label="secondary" bg="bg-secondary" />
+        <c-components.swatch label="secondary-hover" bg="bg-secondary-hover" />
+        <c-components.swatch label="secondary-foreground" bg="bg-secondary-foreground" />
+        <c-components.swatch label="accent" bg="bg-accent" />
+        <c-components.swatch label="accent-foreground" bg="bg-accent-foreground" />
+      </div>
+    </div>
+    <div>
+      <p class="text-xs font-medium uppercase tracking-wide text-muted-foreground">Neutrals</p>
+      <div class="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+        <c-components.swatch label="background" bg="bg-background" />
+        <c-components.swatch label="surface" bg="bg-surface" />
+        <c-components.swatch label="muted" bg="bg-muted" />
+        <c-components.swatch label="muted-foreground" bg="bg-muted-foreground" />
+        <c-components.swatch label="foreground" bg="bg-foreground" />
+        <c-components.swatch label="border" bg="bg-border" />
+        <c-components.swatch label="border-strong" bg="bg-border-strong" />
+        <c-components.swatch label="ring" bg="bg-ring" />
+      </div>
+    </div>
+    <div>
+      <p class="text-xs font-medium uppercase tracking-wide text-muted-foreground">Inverse</p>
+      <div class="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+        <c-components.swatch label="inverse-surface" bg="bg-inverse-surface" />
+        <c-components.swatch label="inverse-foreground" bg="bg-inverse-foreground" />
+        <c-components.swatch label="inverse-muted" bg="bg-inverse-muted" />
+      </div>
+    </div>
+    <div>
+      <p class="text-xs font-medium uppercase tracking-wide text-muted-foreground">Status</p>
+      <div class="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+        <c-components.swatch label="success" bg="bg-success" />
+        <c-components.swatch label="success-soft" bg="bg-success-soft" />
+        <c-components.swatch label="success-soft-foreground" bg="bg-success-soft-foreground" />
+        <c-components.swatch label="warning" bg="bg-warning" />
+        <c-components.swatch label="warning-soft" bg="bg-warning-soft" />
+        <c-components.swatch label="warning-soft-foreground" bg="bg-warning-soft-foreground" />
+        <c-components.swatch label="danger" bg="bg-danger" />
+        <c-components.swatch label="danger-soft" bg="bg-danger-soft" />
+        <c-components.swatch label="danger-soft-foreground" bg="bg-danger-soft-foreground" />
+        <c-components.swatch label="danger-hover" bg="bg-danger-hover" />
+        <c-components.swatch label="info" bg="bg-info" />
+        <c-components.swatch label="info-soft" bg="bg-info-soft" />
+        <c-components.swatch label="info-soft-foreground" bg="bg-info-soft-foreground" />
+      </div>
+    </div>
+  </div>
+</c-components.example>
+
+<h3 id="typography">Typography</h3>
+<p>
+  Three font roles, also defined in <code>@theme</code>:
+  <code>font-display</code> for headings, <code>font-sans</code> for
+  everything, <code>font-mono</code> for code. Display defaults to the sans
+  stack until a brand wants its own face.
+</p>
+<c-components.example>
+  <div class="w-full space-y-8">
+    <div>
+      <p class="text-xs font-medium uppercase tracking-wide text-muted-foreground">font-display</p>
+      <p class="mt-2 font-display text-3xl font-semibold tracking-tight text-foreground">The five boxing wizards jump quickly</p>
+    </div>
+    <div>
+      <p class="text-xs font-medium uppercase tracking-wide text-muted-foreground">font-sans</p>
+      <p class="mt-2 max-w-prose text-[15px] leading-7 text-muted-foreground">The quick brown fox jumps over the lazy dog, then settles in for a long paragraph of perfectly ordinary body copy at fifteen pixels over a seven-line rhythm.</p>
+    </div>
+    <div>
+      <p class="text-xs font-medium uppercase tracking-wide text-muted-foreground">font-mono</p>
+      <p class="mt-2 font-mono text-sm text-foreground">user_create(email="ada@example.com", password="…")</p>
+    </div>
+  </div>
+</c-components.example>
+
+<h3 id="shape">Radius &amp; shadow</h3>
+<p>
+  Two radii and two shadows cover the whole app: <code>control</code> for
+  buttons, inputs, and small boxes; <code>surface</code> for cards and modals.
+  Sharpen or soften the entire product from four lines of theme.
+</p>
+<c-components.example>
+  <div class="grid w-full grid-cols-2 gap-4 lg:grid-cols-4">
+    <div class="flex h-24 items-center justify-center rounded-control border border-border bg-surface font-mono text-xs text-muted-foreground">rounded-control</div>
+    <div class="flex h-24 items-center justify-center rounded-surface border border-border bg-surface font-mono text-xs text-muted-foreground">rounded-surface</div>
+    <div class="flex h-24 items-center justify-center rounded-surface bg-surface font-mono text-xs text-muted-foreground shadow-card">shadow-card</div>
+    <div class="flex h-24 items-center justify-center rounded-surface bg-surface font-mono text-xs text-muted-foreground shadow-card-hover">shadow-card-hover</div>
+  </div>
+</c-components.example>
+
+<h2 id="identity">Identity</h2>
+<p>
+  Who the product says it is: the wordmark and the image assets, each with
+  one file to swap in a rebrand.
+</p>
+
+<h3 id="brand">Brand</h3>
+<p>
+  The wordmark, linking home. The name is hard-coded here on purpose: this
+  is the component a real brand replaces with its own logo. The site name
+  in admin settings drives the text-only surfaces — the page titles, the
+  footer copyright, and the PWA manifest.
+</p>
+<c-components.example>
+  <c-brand />
+  <c-slot name="code">&lt;c-brand /&gt;</c-slot>
+</c-components.example>
+
+<h3 id="logos">Logos</h3>
+<p>
+  The brand image assets, all in <code>static/icons/</code>. Swapping these
+  four files rebrands the favicon, the home-screen icons, and the PWA install
+  banner — each tile names the template that wires it in.
+</p>
+<c-components.example>
+  <div class="grid w-full grid-cols-2 gap-4 sm:grid-cols-4">
+    <div class="flex flex-col items-center gap-2 rounded-control border border-border bg-surface px-3 py-4 text-center">
+      <img src="{% static 'icons/favicon.svg' %}" alt="Favicon" class="h-12 w-12 rounded-lg">
+      <p class="font-mono text-[11px] text-foreground">favicon.svg</p>
+      <p class="text-[11px] text-muted-foreground">base.html icon link</p>
+    </div>
+    <div class="flex flex-col items-center gap-2 rounded-control border border-border bg-surface px-3 py-4 text-center">
+      <img src="{% static 'icons/apple-touch-icon.png' %}" alt="Apple touch icon" class="h-12 w-12 rounded-lg">
+      <p class="font-mono text-[11px] text-foreground">apple-touch-icon.png</p>
+      <p class="text-[11px] text-muted-foreground">base.html apple-touch-icon</p>
+    </div>
+    <div class="flex flex-col items-center gap-2 rounded-control border border-border bg-surface px-3 py-4 text-center">
+      <img src="{% static 'icons/icon-192.png' %}" alt="PWA icon 192" class="h-12 w-12 rounded-lg">
+      <p class="font-mono text-[11px] text-foreground">icon-192.png</p>
+      <p class="text-[11px] text-muted-foreground">manifest.webmanifest</p>
+    </div>
+    <div class="flex flex-col items-center gap-2 rounded-control border border-border bg-surface px-3 py-4 text-center">
+      <img src="{% static 'icons/icon-512.png' %}" alt="PWA icon 512" class="h-12 w-12 rounded-lg">
+      <p class="font-mono text-[11px] text-foreground">icon-512.png</p>
+      <p class="text-[11px] text-muted-foreground">manifest.webmanifest</p>
+    </div>
+  </div>
+</c-components.example>
+
+<h3 id="icons">Icons</h3>
+<p>
+  Icons are inline SVGs in the lucide style: a 24&times;24 viewBox,
+  <code>stroke-width="1.5"</code>, round caps and joins, and
+  <code>currentColor</code> so they follow the text color of wherever they
+  sit. There is no icon component — copy the markup from the tile and size it
+  with <code>h-4 w-4</code> or <code>h-5 w-5</code>. These are the ones the
+  app uses today.
+</p>
+<c-components.example>
+  <div class="grid w-full grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6">
+    <c-components.icon label="panel-left">
+      <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M9 4v16" /></svg>
+    </c-components.icon>
+    <c-components.icon label="panel-right">
+      <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M15 4v16" /></svg>
+    </c-components.icon>
+    <c-components.icon label="x">
+      <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 6l12 12m0-12L6 18" /></svg>
+    </c-components.icon>
+    <c-components.icon label="arrow-up-right">
+      <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7" /><path d="M8 7h9v9" /></svg>
+    </c-components.icon>
+    <c-components.icon label="link">
+      <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" /></svg>
+    </c-components.icon>
+    <c-components.icon label="shield">
+      <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
+    </c-components.icon>
+    <c-components.icon label="log-out">
+      <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><path d="M16 17l5-5-5-5" /><path d="M21 12H9" /></svg>
+    </c-components.icon>
+    <c-components.icon label="zap">
+      <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" /></svg>
+    </c-components.icon>
+    <c-components.icon label="file-text">
+      <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" /><path d="M14 3v6h6" /><path d="M8 13h8" /><path d="M8 17h5" /></svg>
+    </c-components.icon>
+    <c-components.icon label="layout-grid">
+      <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" /><rect x="3" y="14" width="7" height="7" rx="1.5" /><rect x="14" y="14" width="7" height="7" rx="1.5" /></svg>
+    </c-components.icon>
+    <c-components.icon label="trash">
+      <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18" /><path d="M9 6V4h6v2" /><path d="M19 6l-1 14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1L5 6" /><path d="M10 11v6" /><path d="M14 11v6" /></svg>
+    </c-components.icon>
+    <c-components.icon label="stop-circle">
+      <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" /><rect x="9" y="9" width="6" height="6" rx="1" /></svg>
+    </c-components.icon>
+    <c-components.icon label="cloud-upload">
+      <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14.9A7 7 0 1 1 15.7 8h1.8a4.5 4.5 0 0 1 2.5 8.2" /><path d="M12 12v9" /><path d="m8 17 4-4 4 4" /></svg>
+    </c-components.icon>
+    <c-components.icon label="download">
+      <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="M7 10l5 5 5-5" /><path d="M12 15V3" /></svg>
+    </c-components.icon>
+    <c-components.icon label="music">
+      <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" /></svg>
+    </c-components.icon>
+    <c-components.icon label="archive">
+      <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="5" rx="1" /><path d="M5 9v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9" /><path d="M10 13h4" /></svg>
+    </c-components.icon>
+    <c-components.icon label="file">
+      <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" /><path d="M14 3v6h6" /></svg>
+    </c-components.icon>
+  </div>
+</c-components.example>
+
+<h2 id="primitives">Primitives</h2>
+<p>
+  The reusable interface pieces, rendered live above the markup that
+  produces them.
+</p>
+
+<h3 id="button">Button</h3>
+<p>
+  Four variants and three sizes. Pass <code>href</code> to render an anchor
+  styled identically, and any extra attributes land on the element itself.
+</p>
+<c-components.example>
+  <c-button>Primary</c-button>
+  <c-button variant="outline">Outline</c-button>
+  <c-button variant="ghost">Ghost</c-button>
+  <c-button variant="danger">Danger</c-button>
+  <c-button href="#button" variant="outline">Link</c-button>
+  <c-slot name="code">&lt;c-button&gt;Primary&lt;/c-button&gt;
+&lt;c-button variant="outline"&gt;Outline&lt;/c-button&gt;
+&lt;c-button variant="ghost"&gt;Ghost&lt;/c-button&gt;
+&lt;c-button variant="danger"&gt;Danger&lt;/c-button&gt;
+&lt;c-button href="/somewhere/" variant="outline"&gt;Link&lt;/c-button&gt;</c-slot>
+</c-components.example>
+<c-components.example>
+  <c-button size="sm">Small</c-button>
+  <c-button>Medium</c-button>
+  <c-button size="lg">Large</c-button>
+  <c-slot name="code">&lt;c-button size="sm"&gt;Small&lt;/c-button&gt;
+&lt;c-button&gt;Medium&lt;/c-button&gt;
+&lt;c-button size="lg"&gt;Large&lt;/c-button&gt;</c-slot>
+</c-components.example>
+
+<h3 id="badge">Badge</h3>
+<p>
+  A small status pill. Color names match the status roles: neutral for
+  drafts, success for healthy, warning for pending, danger for failing, info
+  for informational.
+</p>
+<c-components.example>
+  <c-badge>Draft</c-badge>
+  <c-badge color="success">Active</c-badge>
+  <c-badge color="warning">Pending</c-badge>
+  <c-badge color="danger">Failed</c-badge>
+  <c-badge color="info">Beta</c-badge>
+  <c-slot name="code">&lt;c-badge&gt;Draft&lt;/c-badge&gt;
+&lt;c-badge color="success"&gt;Active&lt;/c-badge&gt;
+&lt;c-badge color="warning"&gt;Pending&lt;/c-badge&gt;
+&lt;c-badge color="danger"&gt;Failed&lt;/c-badge&gt;
+&lt;c-badge color="info"&gt;Beta&lt;/c-badge&gt;</c-slot>
+</c-components.example>
+
+<h3 id="alert">Alert</h3>
+<p>
+  An inline callout for things the user should notice without being
+  interrupted. The title is optional; the body is the slot.
+</p>
+<c-components.example>
+  <div class="w-full space-y-3">
+    <c-alert>A new version is available. Refresh to pick it up.</c-alert>
+    <c-alert variant="success" title="Changes saved">Your profile has been updated.</c-alert>
+    <c-alert variant="warning">Your trial ends in 3 days.</c-alert>
+    <c-alert variant="danger" title="Payment failed">We couldn't charge your card. Update your billing details.</c-alert>
+  </div>
+  <c-slot name="code">&lt;c-alert&gt;A new version is available. Refresh to pick it up.&lt;/c-alert&gt;
+&lt;c-alert variant="success" title="Changes saved"&gt;Your profile has been updated.&lt;/c-alert&gt;
+&lt;c-alert variant="warning"&gt;Your trial ends in 3 days.&lt;/c-alert&gt;
+&lt;c-alert variant="danger" title="Payment failed"&gt;We couldn't charge your card.&lt;/c-alert&gt;</c-slot>
+</c-components.example>
+
+<h3 id="avatar">Avatar</h3>
+<p>
+  The initial-on-primary treatment the nav uses, as a component. Give it a
+  name or an email; it shows the first character.
+</p>
+<c-components.example>
+  <c-avatar name="ada@example.com" size="sm" />
+  <c-avatar name="Grace Hopper" />
+  <c-avatar name="Katherine Johnson" size="lg" />
+  <c-slot name="code">&lt;c-avatar name="ada@example.com" size="sm" /&gt;
+&lt;c-avatar name="Grace Hopper" /&gt;
+&lt;c-avatar name="Katherine Johnson" size="lg" /&gt;</c-slot>
+</c-components.example>
+
+<h3 id="spinner">Spinner</h3>
+<p>
+  A loading indicator. Drop it next to whatever is waiting — it inherits no
+  layout of its own.
+</p>
+<c-components.example>
+  <c-spinner size="sm" />
+  <c-spinner />
+  <c-spinner size="lg" />
+  <c-button variant="outline"><c-spinner size="sm" /> Saving…</c-button>
+  <c-slot name="code">&lt;c-spinner size="sm" /&gt;
+&lt;c-spinner /&gt;
+&lt;c-spinner size="lg" /&gt;
+&lt;c-button variant="outline"&gt;&lt;c-spinner size="sm" /&gt; Saving…&lt;/c-button&gt;</c-slot>
+</c-components.example>
+
+<h3 id="field">Field</h3>
+<p>
+  A labelled input with help and error text. The input picks up the project's
+  base form styles; an error swaps the help line and turns the border red.
+  Bound Django form fields keep using <code>&lt;c-account.fields /&gt;</code> —
+  this one is for hand-built forms.
+</p>
+<c-components.example>
+  <div class="w-full max-w-sm space-y-5">
+    <c-field label="Email" name="email" type="email" placeholder="you@example.com" help="We'll only use this to sign you in." />
+    <c-field label="Password" name="password" type="password" error="Must be at least 12 characters." />
+  </div>
+  <c-slot name="code">&lt;c-field label="Email" name="email" type="email"
+  placeholder="you@example.com" help="We'll only use this to sign you in." /&gt;
+&lt;c-field label="Password" name="password" type="password"
+  error="Must be at least 12 characters." /&gt;</c-slot>
+</c-components.example>
+
+<h3 id="textarea">Textarea</h3>
+<p>
+  A textarea that never scrolls: it measures its content on the next tick and
+  again on every keystroke, so it starts at the height of whatever it was
+  given and grows and shrinks as lines are added and removed. Initial content
+  goes in the slot, like the text between any pair of tags.
+</p>
+<c-components.example>
+  <div class="w-full max-w-lg">
+    <c-textarea name="notes" placeholder="Write something…">One line to start with.
+Add a few more and the box follows you down the page.</c-textarea>
+  </div>
+  <c-slot name="code">&lt;c-textarea name="notes" placeholder="Write something…"&gt;One line to start with.
+Add a few more and the box follows you down the page.&lt;/c-textarea&gt;</c-slot>
+</c-components.example>
+
+<h3 id="markdown">Markdown</h3>
+<p>
+  Renders markdown to styled HTML in the browser, live. It reads
+  <code>source</code> from the surrounding Alpine scope, so anything that
+  keeps a string there can drive it. <code>markdownEditor</code> is the
+  ready-made scope for the common pairing: it seeds <code>source</code> from
+  the textarea inside it and updates on input. Headings, emphasis, links,
+  lists, quotes, tables, rules, and fenced code blocks are supported; the
+  source is escaped first, so it renders markdown and never raw HTML.
+</p>
+<p>
+  It renders into <code>content</code>, the same prose class this page and the
+  article pages use, so a rendered document and a hand-written one are the
+  same markup styled by the same rules.
+</p>
+<p>
+  Headings carry no <code>id</code> unless you pass <code>ids</code>. With it,
+  each one gets a slug, which is what the content layout's table of contents
+  reads — it re-scans whenever the prose changes, so it follows a live preview
+  as you type. That is what you want when the markdown <em>is</em> the page.
+  Embedded in one, it is the wrong thing twice over: the headings would join
+  the host page's table of contents, and a heading like
+  <code>## Overview</code> would collide with the host page's own anchor.
+  Hence the default, and hence typing a heading into the example below
+  changing nothing on this page.
+</p>
+<c-components.example>
+  <div x-data="markdownEditor" @input="edit" class="grid w-full gap-4 sm:grid-cols-2">
+    <c-textarea class="font-mono">## Rendered live
+
+Type on the left — **bold**, *italic*,
+`code`, and [links](#markdown) all work.
+
+- Lists nest
+  - like this
+1. And ordered ones count
+
+&gt; Quotes sit in the margin.
+</c-textarea>
+    <c-markdown />
+  </div>
+  <c-slot name="code">&lt;div x-data="markdownEditor" @input="edit"&gt;
+  &lt;c-textarea class="font-mono"&gt;## Rendered live&lt;/c-textarea&gt;
+  &lt;c-markdown /&gt;
+&lt;/div&gt;</c-slot>
+</c-components.example>
+<p>
+  The full page version, with a source card and a preview card side by side,
+  is the <a href="{% url 'demos-markdown' %}">markdown demo</a>.
+</p>
+
+<h3 id="toggle">Toggle</h3>
+<p>
+  A switch for boolean settings. Give it a <code>name</code> and it carries a
+  hidden input, so it posts like a checkbox inside an ordinary form.
+</p>
+<c-components.example>
+  <div class="w-full space-y-4">
+    <c-toggle label="Email notifications" name="notifications" checked />
+    <c-toggle label="Marketing emails" name="marketing" />
+  </div>
+  <c-slot name="code">&lt;c-toggle label="Email notifications" name="notifications" checked /&gt;
+&lt;c-toggle label="Marketing emails" name="marketing" /&gt;</c-slot>
+</c-components.example>
+
+<h3 id="tooltip">Tooltip</h3>
+<p>
+  A hover label for icon buttons and truncated text. Wrap the element and say
+  which side the label appears on.
+</p>
+<c-components.example>
+  <c-tooltip label="Appears above">
+    <c-button variant="outline" size="sm">Top</c-button>
+  </c-tooltip>
+  <c-tooltip label="Appears below" position="bottom">
+    <c-button variant="outline" size="sm">Bottom</c-button>
+  </c-tooltip>
+  <c-tooltip label="Appears left" position="left">
+    <c-button variant="outline" size="sm">Left</c-button>
+  </c-tooltip>
+  <c-tooltip label="Appears right" position="right">
+    <c-button variant="outline" size="sm">Right</c-button>
+  </c-tooltip>
+  <c-slot name="code">&lt;c-tooltip label="Appears above"&gt;
+  &lt;c-button variant="outline" size="sm"&gt;Top&lt;/c-button&gt;
+&lt;/c-tooltip&gt;
+&lt;c-tooltip label="Appears below" position="bottom"&gt;…&lt;/c-tooltip&gt;</c-slot>
+</c-components.example>
+
+<h3 id="dropdown">Dropdown</h3>
+<p>
+  A click-to-open menu. The trigger is whatever you put in the
+  <code>trigger</code> slot; items are <code>&lt;c-dropdown-item&gt;</code>,
+  which render an anchor when given <code>href</code> and a button otherwise.
+  Escape and clicking outside both close it.
+</p>
+<c-components.example>
+  <c-dropdown>
+    <c-slot name="trigger"><c-button variant="outline">Options</c-button></c-slot>
+    <c-dropdown-item href="#dropdown">Profile</c-dropdown-item>
+    <c-dropdown-item href="#dropdown">Settings</c-dropdown-item>
+    <div class="my-1 h-px bg-border/60"></div>
+    <c-dropdown-item>Sign out</c-dropdown-item>
+  </c-dropdown>
+  <c-dropdown align="right">
+    <c-slot name="trigger"><c-button variant="ghost">Right-aligned</c-button></c-slot>
+    <c-dropdown-item>Duplicate</c-dropdown-item>
+    <c-dropdown-item>Archive</c-dropdown-item>
+  </c-dropdown>
+  <c-slot name="code">&lt;c-dropdown&gt;
+  &lt;c-slot name="trigger"&gt;&lt;c-button variant="outline"&gt;Options&lt;/c-button&gt;&lt;/c-slot&gt;
+  &lt;c-dropdown-item href="/profile/"&gt;Profile&lt;/c-dropdown-item&gt;
+  &lt;c-dropdown-item href="/settings/"&gt;Settings&lt;/c-dropdown-item&gt;
+  &lt;c-dropdown-item&gt;Sign out&lt;/c-dropdown-item&gt;
+&lt;/c-dropdown&gt;</c-slot>
+</c-components.example>
+
+<h3 id="dropdown_item">Dropdown item</h3>
+<p>
+  The rows inside a dropdown, shown live above. A sub-part of a compound
+  primitive keeps a flat root name — <code>&lt;c-dropdown-item&gt;</code>, not
+  a nested namespace — so the root of <code>cotton/</code> stays the complete
+  list of primitives and this section stays enforced by the guard test.
+</p>
+
+<h3 id="modal">Modal</h3>
+<p>
+  A dialog that teleports to <code>&lt;body&gt;</code>, so it works from inside
+  any stacking context. The <code>trigger</code> slot opens it; escape, the
+  close button, and clicking the backdrop all close it, and the page behind
+  stops scrolling while it's open. Buttons inside the modal can close it with
+  <code>@click="close"</code>. On small screens it rises from the bottom
+  edge; on larger ones it scales in at center.
+</p>
+<c-components.example>
+  <c-modal title="Invite your team">
+    <c-slot name="trigger"><c-button>Invite people</c-button></c-slot>
+    Send teammates an invitation to join this workspace. They'll get an email
+    with a link that expires in 7 days.
+    <c-slot name="footer">
+      <c-button variant="outline" @click="close">Cancel</c-button>
+      <c-button @click="close">Send invites</c-button>
+    </c-slot>
+  </c-modal>
+  <c-slot name="code">&lt;c-modal title="Invite your team"&gt;
+  &lt;c-slot name="trigger"&gt;&lt;c-button&gt;Invite people&lt;/c-button&gt;&lt;/c-slot&gt;
+  Send teammates an invitation to join this workspace.
+  &lt;c-slot name="footer"&gt;
+    &lt;c-button variant="outline" @click="close"&gt;Cancel&lt;/c-button&gt;
+    &lt;c-button @click="close"&gt;Send invites&lt;/c-button&gt;
+  &lt;/c-slot&gt;
+&lt;/c-modal&gt;</c-slot>
+</c-components.example>
+<p>
+  Sizes: <code>sm</code> for confirmations, <code>md</code> (the default) for
+  forms, <code>lg</code> for anything with real content. A destructive
+  confirmation is just a small modal with a danger button in the footer.
+</p>
+<c-components.example>
+  <c-modal title="Delete project?" size="sm">
+    <c-slot name="trigger"><c-button variant="danger">Delete project</c-button></c-slot>
+    This permanently deletes the project and everything in it. There is no
+    undo.
+    <c-slot name="footer">
+      <c-button variant="outline" @click="close">Cancel</c-button>
+      <c-button variant="danger" @click="close">Delete</c-button>
+    </c-slot>
+  </c-modal>
+  <c-modal title="Release notes" size="lg">
+    <c-slot name="trigger"><c-button variant="outline">Large modal</c-button></c-slot>
+    A large modal for content that needs room — long forms, previews,
+    anything that would feel cramped at the default width. The panel scrolls
+    with the page if it outgrows the viewport.
+  </c-modal>
+  <c-slot name="code">&lt;c-modal title="Delete project?" size="sm"&gt;
+  &lt;c-slot name="trigger"&gt;&lt;c-button variant="danger"&gt;Delete project&lt;/c-button&gt;&lt;/c-slot&gt;
+  This permanently deletes the project and everything in it.
+  &lt;c-slot name="footer"&gt;
+    &lt;c-button variant="outline" @click="close"&gt;Cancel&lt;/c-button&gt;
+    &lt;c-button variant="danger" @click="close"&gt;Delete&lt;/c-button&gt;
+  &lt;/c-slot&gt;
+&lt;/c-modal&gt;</c-slot>
+</c-components.example>
+<p>
+  For the most destructive actions, give the modal a <code>confirm</code>
+  string. It renders a type-to-confirm input, and the footer can gate its
+  button with <code>:disabled="blocked"</code>, which stays true until the
+  typed text matches. The challenge resets whenever the modal closes.
+</p>
+<c-components.example>
+  <c-modal title="Delete everything?" size="sm" confirm="delete">
+    <c-slot name="trigger"><c-button variant="danger">Strict delete</c-button></c-slot>
+    This one refuses to arm until you type the word.
+    <c-slot name="footer">
+      <c-button variant="outline" @click="close">Cancel</c-button>
+      <c-button variant="danger" x-bind:disabled="blocked" @click="close">Delete</c-button>
+    </c-slot>
+  </c-modal>
+  <c-slot name="code">&lt;c-modal title="Delete everything?" size="sm" confirm="delete"&gt;
+  &lt;c-slot name="trigger"&gt;&lt;c-button variant="danger"&gt;Strict delete&lt;/c-button&gt;&lt;/c-slot&gt;
+  This one refuses to arm until you type the word.
+  &lt;c-slot name="footer"&gt;
+    &lt;c-button variant="outline" @click="close"&gt;Cancel&lt;/c-button&gt;
+    &lt;c-button variant="danger" x-bind:disabled="blocked" @click="close"&gt;Delete&lt;/c-button&gt;
+  &lt;/c-slot&gt;
+&lt;/c-modal&gt;</c-slot>
+</c-components.example>
+
+<h3 id="card_grid">Card grid</h3>
+<p>
+  A responsive grid that steps from one column to four. It holds the grid
+  definition so a page never repeats the breakpoints, and so a flat page and
+  a sectioned one lay out identically.
+</p>
+<c-components.example>
+  <c-card-grid>
+    <div class="rounded-surface border border-border bg-surface p-4 text-sm text-muted-foreground">One</div>
+    <div class="rounded-surface border border-border bg-surface p-4 text-sm text-muted-foreground">Two</div>
+    <div class="rounded-surface border border-border bg-surface p-4 text-sm text-muted-foreground">Three</div>
+  </c-card-grid>
+  <c-slot name="code">&lt;c-card-grid&gt;
+  &lt;div&gt;One&lt;/div&gt;
+  &lt;div&gt;Two&lt;/div&gt;
+&lt;/c-card-grid&gt;</c-slot>
+</c-components.example>
+
+<h3 id="card_section">Card section</h3>
+<p>
+  A titled group of cards, for when a grid wants dividing into sections. It
+  renders the same grid underneath, so a page can mix flat grids and sections
+  without them drifting apart.
+</p>
+<c-components.example>
+  <c-card-section title="Features">
+    <div class="rounded-surface border border-border bg-surface p-4 text-sm text-muted-foreground">One</div>
+    <div class="rounded-surface border border-border bg-surface p-4 text-sm text-muted-foreground">Two</div>
+  </c-card-section>
+  <c-slot name="code">&lt;c-card-section title="Features"&gt;
+  &lt;div&gt;One&lt;/div&gt;
+  &lt;div&gt;Two&lt;/div&gt;
+&lt;/c-card-section&gt;</c-slot>
+</c-components.example>
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends "layouts/base.html" %}
+
+{% block nav %}<c-nav />{% endblock %}
+
+{% block title %}Page not found{% endblock %}
+
+{% block content %}
+<div class="flex flex-1 items-center justify-center px-4">
+  <div class="text-center">
+    <p class="text-sm font-medium text-muted-foreground">404</p>
+    <h1 class="mt-2 text-2xl font-semibold tracking-tight">Page not found</h1>
+    <p class="mt-1 text-sm text-muted-foreground">The page you're looking for doesn't exist.</p>
+    <a href="{% url 'index' %}" class="btn-outline mt-6">Go home</a>
+  </div>
+</div>
+{% endblock %}

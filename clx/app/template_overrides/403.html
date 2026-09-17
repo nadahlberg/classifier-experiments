@@ -1,0 +1,16 @@
+{% extends "layouts/base.html" %}
+
+{% block nav %}<c-nav />{% endblock %}
+
+{% block title %}Access denied{% endblock %}
+
+{% block content %}
+<div class="flex flex-1 items-center justify-center px-4">
+  <div class="text-center">
+    <p class="text-sm font-medium text-muted-foreground">403</p>
+    <h1 class="mt-2 text-2xl font-semibold tracking-tight">Access denied</h1>
+    <p class="mt-1 text-sm text-muted-foreground">You don't have permission to view this page.</p>
+    <a href="{% url 'index' %}" class="btn-outline mt-6">Go home</a>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,8 @@
+<c-vars variant="primary" size="md" href="" type="button" />
+
+{% if href %}<a href="{{ href }}"{% else %}<button type="{{ type }}"{% endif %}
+  {{ attrs }}
+  class="inline-flex items-center justify-center gap-2 rounded-control font-medium transition disabled:pointer-events-none disabled:opacity-50
+    {% if size == 'sm' %}px-3 py-1.5 text-sm{% elif size == 'lg' %}px-6 py-3 text-base{% else %}px-4 py-2.5 text-sm{% endif %}
+    {% if variant == 'outline' %}border border-border text-foreground hover:bg-accent{% elif variant == 'ghost' %}text-accent-foreground hover:bg-accent{% elif variant == 'danger' %}bg-danger text-danger-foreground hover:bg-danger-hover{% else %}bg-primary text-primary-foreground hover:bg-primary-hover{% endif %}"
+>{{ slot }}{% if href %}</a>{% else %}</button>{% endif %}

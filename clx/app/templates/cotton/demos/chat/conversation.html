@@ -1,0 +1,79 @@
+<div x-data="chatConversation" class="flex-1 space-y-4 pb-4" role="log" aria-live="polite">
+  <template x-for="part in parts" :key="part.key">
+    <div>
+      <div x-show="part.isUser" class="flex justify-end">
+        <div class="max-w-[85%] whitespace-pre-wrap rounded-surface bg-primary px-4 py-2.5 text-sm text-primary-foreground" x-text="part.content"></div>
+      </div>
+      <div x-show="part.isAssistant" class="max-w-[85%]">
+        <div class="content text-sm" x-html="part.html"></div>
+        <p x-show="part.interrupted" class="mt-1 text-xs text-muted-foreground">Stopped</p>
+      </div>
+      <div x-show="part.isTool" class="space-y-2">
+        <div x-show="part.showCallCustom" x-html="part.callHtml"></div>
+        <div x-show="part.showCallDefault" class="rounded-control border border-border bg-muted px-4 py-3">
+          <p class="text-xs font-medium uppercase tracking-wide text-muted-foreground" x-text="part.name"></p>
+          <pre class="mt-1 overflow-x-auto text-xs text-foreground" x-text="part.argsJson"></pre>
+          <p x-show="part.showCallPending" class="mt-1 text-xs text-muted-foreground">Running&hellip;</p>
+        </div>
+        <div x-show="part.showResultCustom" x-html="part.resultHtml"></div>
+        <div x-show="part.showResultDefault" class="rounded-control border border-border bg-muted px-4 py-3">
+          <p class="text-xs font-medium uppercase tracking-wide text-muted-foreground" x-text="part.name"></p>
+          <p class="mt-1 whitespace-pre-wrap text-xs text-foreground" x-text="part.resultText"></p>
+          <pre x-show="part.hasRenderData" class="mt-1 overflow-x-auto text-xs text-muted-foreground" x-text="part.renderDataJson"></pre>
+        </div>
+      </div>
+      <div x-show="part.isCompaction" class="py-1">
+        <div class="flex items-center gap-3 text-xs text-muted-foreground">
+          <span class="h-px flex-1 bg-border"></span>
+          <span>Conversation compacted</span>
+          <span class="h-px flex-1 bg-border"></span>
+        </div>
+        <details class="mt-1 text-center">
+          <summary class="cursor-pointer text-xs text-muted-foreground transition hover:text-foreground">Show summary</summary>
+          <p class="mt-2 whitespace-pre-wrap rounded-control bg-muted px-4 py-3 text-left text-xs leading-5 text-muted-foreground" x-text="part.content"></p>
+        </details>
+      </div>
+    </div>
+  </template>
+  <div x-show="showTyping" x-cloak class="flex justify-start">
+    <div class="rounded-surface bg-muted px-4 py-3">
+      <span class="flex gap-1">
+        <span class="h-1.5 w-1.5 animate-bounce rounded-full bg-muted-foreground"></span>
+        <span class="h-1.5 w-1.5 animate-bounce rounded-full bg-muted-foreground [animation-delay:150ms]"></span>
+        <span class="h-1.5 w-1.5 animate-bounce rounded-full bg-muted-foreground [animation-delay:300ms]"></span>
+      </span>
+    </div>
+  </div>
+  <div x-show="failed" x-cloak>
+    <c-alert variant="danger" title="Something went wrong">
+      The response failed. The details are in the server logs; send another
+      message to try again.
+    </c-alert>
+  </div>
+  <div x-show="empty" x-cloak class="rounded-control border border-dashed border-border-strong px-4 py-12 text-center">
+    <p class="text-sm text-muted-foreground">Ask about the weather anywhere &mdash; the agent answers with a mock tool.</p>
+  </div>
+</div>
+
+{% script %}
+<script>
+  document.addEventListener("alpine:init", () => {
+    Alpine.data("chatConversation", () => ({
+      init() {
+        this.$watch("tick", () => this.scroll());
+      },
+      get tick() { return this.$store.chat.tick; },
+      get parts() { return this.$store.chat.parts; },
+      get empty() { return this.$store.chat.emptyThread; },
+      get showTyping() { return this.$store.chat.showTyping; },
+      get failed() { return this.$store.chat.failed; },
+      scroll() {
+        this.$nextTick(() => {
+          const pane = this.$el.closest(".overflow-y-auto");
+          if (pane) pane.scrollTop = pane.scrollHeight;
+        });
+      },
+    }));
+  });
+</script>
+{% endscript %}

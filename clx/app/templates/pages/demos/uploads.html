@@ -1,0 +1,370 @@
+{% extends "layouts/three_panel.html" %}
+
+{% block title %}Uploads demo{% endblock %}
+
+{% block left %}
+<div
+  x-data="uploadPanel"
+  data-list-url="{% url 'demos-upload-list' %}"
+  data-create-url="{% url 'demos-upload-create' %}"
+  data-max-files="{{ max_files }}"
+  data-max-size-mb="{{ max_size_mb }}"
+  class="space-y-4"
+>
+  {% csrf_token %}
+  <p class="text-sm font-medium text-foreground">Your files</p>
+  <p class="text-xs leading-5 text-muted-foreground">Upload up to {{ max_files }} files at a time, {{ max_size_mb }} MB each. They land in the private bucket under your user id.</p>
+  <c-modal title="Upload files" size="lg">
+    <c-slot name="trigger"><button type="button" class="btn w-full">Upload files</button></c-slot>
+    <div
+      @dragover.prevent="dragOver"
+      @dragleave.prevent="dragLeave"
+      @drop.prevent="drop"
+      @click="pick"
+      :class="dropzoneClass"
+      class="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-control border-2 border-dashed px-6 py-10 text-center transition"
+    >
+      <svg class="h-8 w-8 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 14.9A7 7 0 1 1 15.7 8h1.8a4.5 4.5 0 0 1 2.5 8.2" />
+        <path d="M12 12v9" />
+        <path d="m8 17 4-4 4 4" />
+      </svg>
+      <p class="text-sm font-medium text-foreground">Drag files here or click to browse</p>
+      <p class="text-xs text-muted-foreground">Up to {{ max_files }} files, {{ max_size_mb }} MB each</p>
+      <input type="file" multiple class="hidden" @click.stop @change="fileChange">
+    </div>
+    <div x-show="$store.uploads.pending.length" class="mt-4 space-y-2 text-left">
+      <template x-for="(p, i) in $store.uploads.pending" :key="i">
+        <div class="flex items-center gap-3 rounded-control border px-3 py-2" :class="p.rowClass">
+          <template x-if="p.hasPreview">
+            <img :src="p.url" alt="" class="h-10 w-10 shrink-0 rounded-md object-cover">
+          </template>
+          <template x-if="p.noPreview">
+            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
+              <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" />
+                <path d="M14 3v6h6" />
+              </svg>
+            </div>
+          </template>
+          <div class="min-w-0 flex-1">
+            <p class="truncate text-sm text-foreground" x-text="p.name"></p>
+            <p class="text-xs" :class="p.sizeClass" x-text="p.sizeNote"></p>
+          </div>
+          <button type="button" :data-index="i" @click="removePending" aria-label="Remove from selection" class="shrink-0 rounded-md p-1.5 text-muted-foreground transition hover:bg-accent hover:text-foreground">
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+              <path d="M6 6l12 12m0-12L6 18" />
+            </svg>
+          </button>
+        </div>
+      </template>
+      <p x-show="$store.uploads.over" class="text-xs text-danger">At most {{ max_files }} files per upload — remove some.</p>
+      <p x-show="$store.uploads.error" class="text-xs text-danger" x-text="$store.uploads.error"></p>
+    </div>
+    <c-slot name="footer">
+      <c-button variant="outline" @click="cancelPending">Cancel</c-button>
+      <c-button @click="submit" x-bind:disabled="$store.uploads.submitBlocked">
+        <span x-text="$store.uploads.uploadLabel"></span>
+      </c-button>
+    </c-slot>
+  </c-modal>
+</div>
+{% endblock %}
+
+{% block toolbar %}
+<p class="min-w-0 truncate text-sm font-medium text-foreground">Files</p>
+<p x-data class="shrink-0 text-xs text-muted-foreground" x-text="$store.uploads.summary"></p>
+{% endblock %}
+
+{% block center %}
+<div x-data="uploadGrid">
+  <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
+    <template x-for="u in items" :key="u.id">
+      <div class="group relative overflow-hidden rounded-surface border border-border bg-surface">
+        <button type="button" :data-id="u.id" @click="remove" aria-label="Delete file" class="absolute right-2 top-2 z-20 flex h-6 w-6 items-center justify-center rounded-full bg-inverse-surface/60 text-inverse-foreground transition hover:bg-danger">
+          <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M6 6l12 12m0-12L6 18" />
+          </svg>
+        </button>
+        <div class="relative flex aspect-square items-center justify-center overflow-hidden bg-muted">
+          <template x-if="u.isImage">
+            <img :src="u.fileUrl" :alt="u.name" loading="lazy" class="h-full w-full object-cover">
+          </template>
+          <template x-if="u.isVideo">
+            <video :src="u.fileUrl" preload="metadata" muted playsinline class="h-full w-full object-cover"></video>
+          </template>
+          <template x-if="u.isPdf">
+            <iframe :src="u.pdfUrl" loading="lazy" tabindex="-1" class="pointer-events-none h-full w-full"></iframe>
+          </template>
+          <template x-if="u.isHtml">
+            <div class="h-full w-full overflow-hidden bg-surface">
+              <iframe sandbox="allow-same-origin" :src="u.fileUrl" loading="lazy" tabindex="-1" class="pointer-events-none h-[400%] w-[400%] origin-top-left scale-25"></iframe>
+            </div>
+          </template>
+          <template x-if="u.isText">
+            <pre class="h-full w-full overflow-hidden whitespace-pre-wrap break-all p-3 text-left font-mono text-[10px] leading-4 text-muted-foreground" x-text="u.snippet"></pre>
+          </template>
+          <template x-if="u.isOther">
+            <div class="flex flex-col items-center gap-2 text-muted-foreground">
+              <svg x-show="u.isAudio" class="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 18V5l12-2v13" />
+                <circle cx="6" cy="18" r="3" />
+                <circle cx="18" cy="16" r="3" />
+              </svg>
+              <svg x-show="u.isArchive" class="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="5" rx="1" />
+                <path d="M5 9v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9" />
+                <path d="M10 13h4" />
+              </svg>
+              <svg x-show="u.isFile" class="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" />
+                <path d="M14 3v6h6" />
+              </svg>
+              <span class="font-mono text-[11px] font-medium" x-text="u.extLabel"></span>
+            </div>
+          </template>
+          <div class="absolute inset-x-0 bottom-0 z-10 flex h-1/2 items-center justify-center bg-linear-to-t from-inverse-surface/70 via-inverse-surface/30 to-transparent opacity-0 transition group-hover:opacity-100">
+            <a :href="u.downloadUrl" aria-label="Download file" class="flex h-10 w-10 items-center justify-center rounded-full bg-surface text-foreground shadow-card transition hover:bg-accent">
+              <svg class="h-4.5 w-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <path d="M7 10l5 5 5-5" />
+                <path d="M12 15V3" />
+              </svg>
+            </a>
+          </div>
+        </div>
+        <div class="border-t border-border px-3 py-2">
+          <p class="truncate text-xs font-medium text-foreground" x-text="u.name"></p>
+          <p class="mt-0.5 text-[11px] text-muted-foreground" x-text="u.sizeLabel"></p>
+        </div>
+      </div>
+    </template>
+  </div>
+  <div x-show="empty" class="rounded-control border border-dashed border-border-strong px-4 py-12 text-center">
+    <p class="text-sm text-muted-foreground">No files yet. Upload some from the left panel.</p>
+  </div>
+</div>
+{% endblock %}
+
+{% block right %}
+<p class="text-sm font-medium text-foreground">How it works</p>
+<ul class="mt-4 space-y-3 text-sm leading-6 text-muted-foreground">
+  <li>Files are stored in the private bucket, namespaced as user id / upload id / filename.</li>
+  <li>Previews and downloads stream through Django, so ownership is checked on every request and the same code works on local storage and S3.</li>
+  <li>Limits — {{ max_files }} files per upload, {{ max_size_mb }} MB each — are enforced in the modal for feedback and in the service for real.</li>
+  <li>Images and videos preview inline, PDFs render their first page, HTML renders scaled down in a sandboxed iframe, and small text files show their opening lines. Office documents keep a type icon — real thumbnails for those need server-side rendering.</li>
+  <li>Deleting a card removes the row and the stored object.</li>
+</ul>
+{% endblock %}
+
+{% script %}
+<script>
+  document.addEventListener("alpine:init", () => {
+    Alpine.store("uploads", {
+      items: [],
+      pending: [],
+      dragging: false,
+      busy: false,
+      error: "",
+      over: false,
+      uploadLabel: "Upload",
+      submitBlocked: true,
+      summary: "0 files",
+      maxFiles: 0,
+      maxSizeMb: 0,
+      maxSize: 0,
+      started: false,
+      start(config) {
+        if (this.started) return;
+        this.started = true;
+        this.listUrl = config.listUrl;
+        this.createUrl = config.createUrl;
+        this.maxFiles = Number(config.maxFiles);
+        this.maxSizeMb = Number(config.maxSizeMb);
+        this.maxSize = this.maxSizeMb * 1024 * 1024;
+        this.refresh();
+      },
+      async refresh() {
+        try {
+          const response = await fetch(this.listUrl);
+          if (response.ok) {
+            this.items = (await response.json()).uploads.map((u) => this.decorate(u));
+          }
+        } catch {}
+        const total = this.items.reduce((n, u) => n + u.size, 0);
+        this.summary = this.items.length
+          ? `${this.items.length} files · ${this.fmtSize(total)}`
+          : "0 files";
+      },
+      decorate(u) {
+        u.kind = this.kind(u);
+        u.isImage = u.kind === "image";
+        u.isVideo = u.kind === "video";
+        u.isPdf = u.kind === "pdf";
+        u.isHtml = u.kind === "html";
+        u.isText = u.kind === "text";
+        u.isAudio = u.kind === "audio";
+        u.isArchive = u.kind === "archive";
+        u.isFile = u.kind === "file";
+        u.isOther = u.isAudio || u.isArchive || u.isFile;
+        u.fileUrl = this.listUrl + u.id + "/file/";
+        u.pdfUrl = u.fileUrl + "#toolbar=0&navpanes=0";
+        u.downloadUrl = this.listUrl + u.id + "/download/";
+        u.sizeLabel = this.fmtSize(u.size);
+        u.extLabel = this.ext(u) || "FILE";
+        u.snippet = "";
+        if (u.isText) this.loadSnippet(u);
+        return u;
+      },
+      snippets: {},
+      async loadSnippet(u) {
+        if (u.id in this.snippets) {
+          u.snippet = this.snippets[u.id];
+          return;
+        }
+        this.snippets[u.id] = "";
+        if (u.size <= 200 * 1024) {
+          try {
+            const response = await fetch(u.fileUrl);
+            if (response.ok) {
+              this.snippets[u.id] = (await response.text()).slice(0, 600);
+            }
+          } catch {}
+        }
+        const item = this.items.find((entry) => entry.id === u.id);
+        if (item) item.snippet = this.snippets[u.id];
+      },
+      sync() {
+        const valid = this.valid();
+        this.over = valid.length > this.maxFiles;
+        this.uploadLabel = valid.length > 1 ? `Upload ${valid.length} files` : "Upload";
+        this.submitBlocked = !valid.length || this.over || this.busy;
+      },
+      add(fileList) {
+        this.error = "";
+        for (const file of fileList) {
+          const tooBig = file.size > this.maxSize;
+          const url = file.type.startsWith("image/") ? URL.createObjectURL(file) : "";
+          this.pending.push({
+            file,
+            name: file.name,
+            size: file.size,
+            url,
+            hasPreview: !!url,
+            noPreview: !url,
+            tooBig,
+            rowClass: tooBig ? "border-danger/40 bg-danger-soft" : "border-border",
+            sizeClass: tooBig ? "text-danger" : "text-muted-foreground",
+            sizeNote: tooBig
+              ? `Over the ${this.maxSizeMb} MB limit — will be skipped`
+              : this.fmtSize(file.size),
+          });
+        }
+        this.sync();
+      },
+      removePending(index) {
+        const [gone] = this.pending.splice(index, 1);
+        if (gone && gone.url) URL.revokeObjectURL(gone.url);
+        this.sync();
+      },
+      clearPending() {
+        this.pending.forEach((p) => p.url && URL.revokeObjectURL(p.url));
+        this.pending = [];
+        this.error = "";
+        this.sync();
+      },
+      valid() {
+        return this.pending.filter((p) => !p.tooBig);
+      },
+      async submit() {
+        if (this.submitBlocked) return false;
+        this.busy = true;
+        this.sync();
+        this.error = "";
+        try {
+          const data = new FormData();
+          this.valid().forEach((p) => data.append("files", p.file));
+          await api(this.createUrl, { method: "POST", body: data });
+          this.clearPending();
+          await this.refresh();
+          return true;
+        } catch (error) {
+          this.error = error.message;
+          return false;
+        } finally {
+          this.busy = false;
+          this.sync();
+        }
+      },
+      async remove(id) {
+        this.error = "";
+        try {
+          await api(this.listUrl + id + "/", { method: "DELETE" });
+        } catch (error) {
+          this.error = error.message;
+        }
+        await this.refresh();
+      },
+      kind(u) {
+        const t = u.content_type || "";
+        if (t.startsWith("image/")) return "image";
+        if (t.startsWith("video/")) return "video";
+        if (t.startsWith("audio/")) return "audio";
+        if (t === "application/pdf") return "pdf";
+        if (t === "text/html") return "html";
+        if (t.startsWith("text/") || ["application/json", "application/xml"].includes(t)) return "text";
+        if (["application/zip", "application/gzip", "application/x-tar", "application/x-7z-compressed", "application/x-rar-compressed"].includes(t)) return "archive";
+        return "file";
+      },
+      ext(u) {
+        const i = u.name.lastIndexOf(".");
+        return i > 0 ? u.name.slice(i + 1).toUpperCase() : "";
+      },
+      fmtSize(bytes) {
+        if (bytes < 1024) return bytes + " B";
+        if (bytes < 1048576) return (bytes / 1024).toFixed(1) + " KB";
+        return (bytes / 1048576).toFixed(1) + " MB";
+      },
+    });
+
+    Alpine.data("uploadPanel", () => ({
+      init() { this.$store.uploads.start(this.$el.dataset); },
+      get dropzoneClass() {
+        return this.$store.uploads.dragging ? "border-primary bg-accent" : "border-border-strong";
+      },
+      pick(evt) {
+        evt.currentTarget.querySelector("input[type=file]").click();
+      },
+      dragOver() { this.$store.uploads.dragging = true; },
+      dragLeave() { this.$store.uploads.dragging = false; },
+      drop(evt) {
+        this.$store.uploads.dragging = false;
+        this.$store.uploads.add(evt.dataTransfer.files);
+      },
+      fileChange(evt) {
+        this.$store.uploads.add(evt.target.files);
+        evt.target.value = "";
+      },
+      removePending(evt) {
+        this.$store.uploads.removePending(Number(evt.currentTarget.dataset.index));
+      },
+      cancelPending() {
+        this.$store.uploads.clearPending();
+        this.$dispatch("modal-close");
+      },
+      async submit() {
+        const ok = await this.$store.uploads.submit();
+        if (ok) this.$dispatch("modal-close");
+      },
+    }));
+
+    Alpine.data("uploadGrid", () => ({
+      get items() { return this.$store.uploads.items; },
+      get empty() { return !this.$store.uploads.items.length; },
+      remove(evt) {
+        this.$store.uploads.remove(evt.currentTarget.dataset.id);
+      },
+    }));
+  });
+</script>
+{% endscript %}

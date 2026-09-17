@@ -1,0 +1,43 @@
+<div
+  x-data="chatHistory"
+  data-threads-url="{% url 'demos-chat-threads' %}"
+  data-agent="demo"
+  class="space-y-4"
+>
+  <button type="button" @click="newChat" class="btn w-full">New chat</button>
+  <div>
+    <p class="text-xs font-medium uppercase tracking-wide text-muted-foreground">History</p>
+    <div class="mt-2 space-y-1">
+      <template x-for="thread in threads" :key="thread.id">
+        <button
+          type="button"
+          :data-id="thread.id"
+          @click="open"
+          class="block w-full rounded-md px-2.5 py-2 text-left transition hover:bg-accent"
+          :class="thread.rowClass"
+        >
+          <span class="flex items-center gap-2">
+            <span class="h-1.5 w-1.5 shrink-0 rounded-full" :class="thread.dotClass"></span>
+            <span class="min-w-0 flex-1 truncate text-sm text-foreground" x-text="thread.label"></span>
+          </span>
+          <span class="mt-0.5 block pl-3.5 text-xs text-muted-foreground" x-text="thread.relativeTime"></span>
+        </button>
+      </template>
+      <p x-show="empty" x-cloak class="px-2.5 py-2 text-xs text-muted-foreground">No conversations yet.</p>
+    </div>
+  </div>
+</div>
+
+{% script %}
+<script>
+  document.addEventListener("alpine:init", () => {
+    Alpine.data("chatHistory", () => ({
+      init() { this.$store.chat.start(this.$el.dataset); },
+      get threads() { return this.$store.chat.threads; },
+      get empty() { return this.$store.chat.emptyList; },
+      open(evt) { this.$store.chat.open(evt.currentTarget.dataset.id); },
+      newChat() { this.$store.chat.newChat(); },
+    }));
+  });
+</script>
+{% endscript %}

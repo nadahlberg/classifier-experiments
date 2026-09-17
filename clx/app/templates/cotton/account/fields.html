@@ -1,0 +1,14 @@
+{% if form.non_field_errors %}
+  <div class="rounded-control border border-danger/25 bg-danger-soft px-4 py-2 text-sm text-danger-soft-foreground">
+    {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+  </div>
+{% endif %}
+{% for field in form %}
+  <div class="space-y-1.5">
+    <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-accent-foreground">{{ field.label }}</label>
+    {{ field }}
+    {% for error in field.errors %}
+      <p class="text-sm text-danger">{{ error }}</p>
+    {% endfor %}
+  </div>
+{% endfor %}

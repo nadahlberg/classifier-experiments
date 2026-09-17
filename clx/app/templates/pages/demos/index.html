@@ -1,0 +1,98 @@
+{% extends "layouts/card_grid.html" %}
+
+{% block title %}Demos{% endblock %}
+
+{% block heading %}Demos{% endblock %}
+
+{% block subheading %}Patterns wired into this project, each one a working page.{% endblock %}
+
+{% block cards %}
+<c-card-grid>
+  <c-demos.demo-card
+    title="Admin"
+    description="Staff tools, behind the app.manage_admin permission."
+    href="{% url 'admin' %}"
+    disabled="{% if perms.app.manage_admin %}no{% else %}yes{% endif %}"
+  >
+    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+    </svg>
+  </c-demos.demo-card>
+  <c-demos.demo-card title="API auth" description="Session and token authentication, scopes, and layered rate limits." href="{% url 'demos-api' %}">
+    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="11" width="18" height="10" rx="2" />
+      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+    </svg>
+  </c-demos.demo-card>
+  <c-demos.demo-card title="Elasticsearch" description="Full-text search over indexed content, with facets and highlighting." href="{% url 'demos-search' %}">
+    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="11" cy="11" r="7" />
+      <path d="m21 21-4.3-4.3" />
+    </svg>
+  </c-demos.demo-card>
+  <c-demos.demo-card title="Chat" description="Streaming chat through LiteLLM, with conversation history." href="{% url 'demos-chat' %}">
+    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 15a2 2 0 0 1-2 2H8l-4 4V5a2 2 0 0 1 2-2h13a2 2 0 0 1 2 2z" />
+      <path d="M8 9h8" />
+      <path d="M8 13h5" />
+    </svg>
+  </c-demos.demo-card>
+  <c-demos.demo-card title="Celery" description="Background jobs with live status: run, schedule, and fan out tasks." href="{% url 'demos-celery' %}">
+    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+    </svg>
+  </c-demos.demo-card>
+  <c-demos.demo-card title="Uploads" description="Drag-and-drop uploads with type-aware previews and streaming downloads." href="{% url 'demos-uploads' %}">
+    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 14.9A7 7 0 1 1 15.7 8h1.8a4.5 4.5 0 0 1 2.5 8.2" />
+      <path d="M12 12v9" />
+      <path d="m8 17 4-4 4 4" />
+    </svg>
+  </c-demos.demo-card>
+  <c-demos.demo-card title="Components" description="The design-system primitives: buttons, fields, modals, toasts." href="{% url 'demos-components' %}">
+    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="3" width="7" height="7" rx="1.5" />
+      <rect x="14" y="3" width="7" height="7" rx="1.5" />
+      <rect x="3" y="14" width="7" height="7" rx="1.5" />
+      <rect x="14" y="14" width="7" height="7" rx="1.5" />
+    </svg>
+  </c-demos.demo-card>
+  <c-demos.demo-card title="Markdown" description="Live markdown preview with an editor that grows to fit its text." href="{% url 'demos-markdown' %}">
+    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="2" y="5" width="20" height="14" rx="2" />
+      <path d="M6 15V9l3 3 3-3v6" />
+      <path d="M17 9v6" />
+      <path d="m15 13 2 2 2-2" />
+    </svg>
+  </c-demos.demo-card>
+  <c-demos.demo-card title="Layout: Dashboard" description="Three-panel app shell with a toolbar and collapsible side panels." href="{% url 'demos-dashboard' %}">
+    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="4" width="18" height="16" rx="2" />
+      <path d="M9 4v16" />
+      <path d="M15 4v16" />
+    </svg>
+  </c-demos.demo-card>
+  <c-demos.demo-card title="Layout: Card grid" description="Heading over a responsive grid of cards, like this page." href="{% url 'demos-card-grid' %}">
+    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="4" width="18" height="16" rx="2" />
+      <path d="M3 10h18" />
+      <path d="M9 10v10" />
+      <path d="M15 10v10" />
+    </svg>
+  </c-demos.demo-card>
+  <c-demos.demo-card title="Layout: Card" description="Centered single-card frame, used by the auth pages." href="{% url 'demos-card' %}">
+    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="5" y="6" width="14" height="12" rx="2" />
+      <path d="M9 10h6" />
+    </svg>
+  </c-demos.demo-card>
+  <c-demos.demo-card title="Layout: Content" description="Long-form article frame with a sticky table of contents." href="{% url 'demos-content' %}">
+    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" />
+      <path d="M14 3v6h6" />
+      <path d="M8 13h8" />
+      <path d="M8 17h5" />
+    </svg>
+  </c-demos.demo-card>
+</c-card-grid>
+{% endblock %}

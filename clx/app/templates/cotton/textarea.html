@@ -1,0 +1,27 @@
+<c-vars name="" placeholder="" class="" />
+
+<textarea
+  x-data="textarea"
+  @input="fit"
+  @resize.window="fit"
+  {% if name %}name="{{ name }}" id="id_{{ name }}"{% endif %}
+  {% if placeholder %}placeholder="{{ placeholder }}"{% endif %}
+  rows="1"
+  {{ attrs }}
+  class="block w-full resize-none overflow-hidden rounded-control border border-border-strong px-3 py-2.5 text-sm text-foreground outline-none transition placeholder:text-muted-foreground/70 focus:border-ring focus:ring-1 focus:ring-ring {{ class }}"
+>{{ slot }}</textarea>
+
+{% script %}
+<script>
+  document.addEventListener("alpine:init", () => {
+    Alpine.data("textarea", () => ({
+      init() { this.$nextTick(() => this.fit()); },
+      fit() {
+        this.$el.style.height = "auto";
+        const borders = this.$el.offsetHeight - this.$el.clientHeight;
+        this.$el.style.height = this.$el.scrollHeight + borders + "px";
+      },
+    }));
+  });
+</script>
+{% endscript %}

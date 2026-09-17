@@ -1,0 +1,332 @@
+{% extends "layouts/three_panel.html" %}
+
+{% block title %}Chat demo{% endblock %}
+
+{% block left %}
+<c-demos.chat.history />
+{% endblock %}
+
+{% block toolbar %}
+<c-demos.chat.toolbar />
+{% endblock %}
+
+{% block center %}
+<div class="mx-auto flex min-h-full max-w-3xl flex-col">
+  {% if not configured %}
+  <div class="mb-6">
+    <c-alert variant="warning" title="No API key configured">
+      Set <span class="font-mono text-xs">OPENAI_API_KEY</span> in the
+      environment and restart the worker; until then every response will
+      fail.
+    </c-alert>
+  </div>
+  {% endif %}
+  <c-demos.chat.conversation />
+  <c-demos.chat.composer />
+</div>
+{% endblock %}
+
+{% block right %}
+<c-demos.chat.state-panel />
+{% endblock %}
+
+{% script %}
+<script>
+  document.addEventListener("alpine:init", () => {
+    Alpine.store("chat", {
+      started: false,
+      threadsUrl: "",
+      agent: "",
+      threads: [],
+      threadId: "",
+      title: "",
+      status: "idle",
+      rows: [],
+      parts: [],
+      tick: 0,
+      state: null,
+      stateHtml: "",
+      stateJson: "",
+      hasState: false,
+      usage: { context_tokens: 0, compact_after_tokens: 0, total_cost: 0 },
+      costLabel: "$0.0000",
+      tokenLabel: "0 tokens",
+      barPercent: 0,
+      overLimit: false,
+      draft: "",
+      busy: false,
+      error: "",
+      source: null,
+      active: false,
+      failed: false,
+      hasThread: false,
+      showTyping: false,
+      emptyThread: true,
+      emptyList: true,
+      start(config) {
+        if (this.started) return;
+        this.started = true;
+        this.threadsUrl = config.threadsUrl;
+        this.agent = config.agent;
+        this.loadThreads();
+        window.addEventListener("focus", () => this.loadThreads());
+      },
+      async loadThreads() {
+        try {
+          const data = await api(this.threadsUrl);
+          this.threads = data.threads.map((thread) => this.decorateThread(thread));
+        } catch {}
+        this.emptyList = !this.threads.length;
+      },
+      decorateThread(thread) {
+        thread.isActive = thread.id === this.threadId;
+        thread.rowClass = thread.isActive ? "bg-accent" : "";
+        thread.dotClass = this.dotClass(thread.status);
+        thread.relativeTime = this.timeSince(thread.updated_at);
+        thread.label = thread.title || "New chat";
+        return thread;
+      },
+      refreshThreads() {
+        this.threads = this.threads.map((thread) => this.decorateThread(thread));
+        this.emptyList = !this.threads.length;
+      },
+      dotClass(status) {
+        if (status === "pending" || status === "running") return "bg-warning animate-pulse";
+        if (status === "failed") return "bg-danger";
+        return "bg-border-strong";
+      },
+      timeSince(iso) {
+        if (!iso) return "";
+        const seconds = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000);
+        if (seconds < 60) return "just now";
+        if (seconds < 3600) return Math.floor(seconds / 60) + "m ago";
+        if (seconds < 86400) return Math.floor(seconds / 3600) + "h ago";
+        return Math.floor(seconds / 86400) + "d ago";
+      },
+      open(id) {
+        if (id === this.threadId) return;
+        this.threadId = id;
+        this.resetThread();
+        this.connect(id);
+        this.refreshThreads();
+      },
+      newChat() {
+        this.disconnect();
+        this.threadId = "";
+        this.resetThread();
+        this.refreshThreads();
+      },
+      resetThread() {
+        this.rows = [];
+        this.error = "";
+        this.title = "";
+        this.status = "idle";
+        this.setState(null, "");
+        this.setUsage({ context_tokens: 0, compact_after_tokens: 0, total_cost: 0 });
+        this.derive();
+        this.tick += 1;
+      },
+      connect(id) {
+        this.disconnect();
+        const source = new EventSource(this.threadsUrl + id + "/events/");
+        source.onmessage = (event) => {
+          if (this.threadId !== id) return;
+          this.applyEvent(JSON.parse(event.data));
+        };
+        this.source = source;
+      },
+      disconnect() {
+        if (this.source) this.source.close();
+        this.source = null;
+      },
+      applyEvent(event) {
+        if (event.type === "snapshot") {
+          this.title = event.thread.title;
+          this.status = event.thread.status;
+          this.rows = event.messages;
+          this.setState(event.state, event.state_html);
+          this.setUsage(event.usage);
+        } else if (event.type === "message") {
+          this.applyMessage(event.message);
+        } else if (event.type === "content_delta") {
+          this.applyDelta(event);
+        } else if (event.type === "content_set") {
+          this.applyCheckpoint(event);
+        } else if (event.type === "state") {
+          this.setState(event.state, event.state_html);
+        } else if (event.type === "title") {
+          this.title = event.title;
+          this.loadThreads();
+        } else if (event.type === "usage") {
+          this.setUsage(event.usage);
+        } else if (event.type === "status") {
+          this.status = event.status;
+          this.loadThreads();
+        } else if (event.type === "deleted") {
+          this.newChat();
+          this.loadThreads();
+        }
+        this.derive();
+        this.tick += 1;
+      },
+      applyMessage(message) {
+        const index = this.rows.findIndex((row) => row.id === message.id);
+        if (index === -1) this.rows.push(message);
+        else this.rows[index] = message;
+      },
+      applyDelta(event) {
+        const row = this.rows.find((entry) => entry.id === event.message_id);
+        if (!row) return;
+        const content = row.content || "";
+        if (event.offset !== content.length) return;
+        row.content = content + event.text;
+      },
+      applyCheckpoint(event) {
+        const row = this.rows.find((entry) => entry.id === event.message_id);
+        if (!row) return;
+        if (event.text.length <= (row.content || "").length) return;
+        row.content = event.text;
+      },
+      setState(state, stateHtml) {
+        this.state = state;
+        this.stateHtml = stateHtml || "";
+        this.hasState = !!(state && Object.keys(state).length);
+        this.stateJson = this.hasState ? JSON.stringify(state, null, 2) : "";
+      },
+      setUsage(usage) {
+        if (!usage) return;
+        this.usage = usage;
+        this.costLabel = "$" + (usage.total_cost || 0).toFixed(4);
+        const limit = usage.compact_after_tokens || 0;
+        const tokens = usage.context_tokens || 0;
+        this.tokenLabel = limit
+          ? this.formatTokens(tokens) + " / " + this.formatTokens(limit) + " tokens"
+          : this.formatTokens(tokens) + " tokens";
+        const max = limit * 1.25;
+        const percent = max ? Math.min(100, (tokens / max) * 100) : 0;
+        this.barPercent = Number(percent.toFixed(1));
+        this.overLimit = limit > 0 && tokens > limit;
+      },
+      formatTokens(value) {
+        if (value >= 1000) return Math.round(value / 1000) + "k";
+        return String(value);
+      },
+      derive() {
+        this.active = this.status === "pending" || this.status === "running";
+        this.failed = this.status === "failed";
+        this.hasThread = !!this.threadId;
+        const results = {};
+        this.rows.forEach((row) => {
+          if (row.role === "tool" && row.tool_call_id) results[row.tool_call_id] = row;
+        });
+        const parts = [];
+        this.rows.forEach((row) => {
+          if (row.kind === "compaction") {
+            parts.push({ key: row.id, isCompaction: true, content: row.content });
+            return;
+          }
+          if (row.role === "user") {
+            parts.push({ key: row.id, isUser: true, content: row.content });
+            return;
+          }
+          if (row.role !== "assistant") return;
+          if (row.content) {
+            parts.push({
+              key: row.id,
+              isAssistant: true,
+              html: markdownRender(row.content),
+              interrupted: !!row.interrupted,
+            });
+          }
+          (row.tool_calls || []).forEach((call) => {
+            parts.push(this.toolPart(row, call, call.id ? results[call.id] : null));
+          });
+        });
+        this.parts = parts;
+        const last = parts[parts.length - 1];
+        this.showTyping = this.active && (!last || last.isUser || (last.isTool && last.done));
+        this.emptyThread = !parts.length;
+      },
+      toolPart(row, call, result) {
+        const done = !!result;
+        const part = {
+          key: row.id + ":" + (call.id || call.name),
+          isTool: true,
+          name: call.name,
+          done: done,
+          argsJson: JSON.stringify(call.args || {}, null, 2),
+          callHtml: call.render_html || "",
+          showCallCustom: call.render_mode === "custom" && !done && this.active,
+          showCallDefault: call.render_mode === "default",
+          showCallPending: call.render_mode === "default" && !done && this.active,
+          showResultCustom: false,
+          showResultDefault: false,
+          resultHtml: "",
+          resultText: "",
+          hasRenderData: false,
+          renderDataJson: "",
+        };
+        if (result) {
+          part.showResultCustom = result.render_mode === "custom";
+          part.showResultDefault = result.render_mode === "default";
+          part.resultHtml = result.render_html || "";
+          part.resultText = result.content || "";
+          part.hasRenderData = !!(result.render_data && Object.keys(result.render_data).length);
+          part.renderDataJson = JSON.stringify(result.render_data || {}, null, 2);
+        }
+        return part;
+      },
+      async send() {
+        const text = this.draft.trim();
+        if (!text || this.busy || this.active) return;
+        this.busy = true;
+        this.error = "";
+        try {
+          const body = { message: text, agent: this.agent };
+          if (this.threadId) body.thread_id = this.threadId;
+          const thread = await api(this.threadsUrl + "send/", { method: "POST", body });
+          this.draft = "";
+          this.status = thread.status;
+          if (!this.threadId) {
+            this.threadId = thread.id;
+            this.connect(thread.id);
+          }
+          this.derive();
+          this.tick += 1;
+          this.loadThreads();
+        } catch (error) {
+          this.error = error.message;
+        } finally {
+          this.busy = false;
+        }
+      },
+      async cancel() {
+        try {
+          await api(this.threadsUrl + this.threadId + "/cancel/", { method: "POST", body: {} });
+        } catch (error) {
+          this.error = error.message;
+        }
+      },
+      async removeThread() {
+        if (!this.threadId) return;
+        try {
+          await api(this.threadsUrl + this.threadId + "/", { method: "DELETE" });
+          this.newChat();
+          this.loadThreads();
+        } catch (error) {
+          this.error = error.message;
+        }
+      },
+      async rename(title) {
+        try {
+          await api(this.threadsUrl + this.threadId + "/rename/", { method: "POST", body: { title } });
+          this.title = title;
+          this.loadThreads();
+        } catch (error) {
+          this.error = error.message;
+        }
+      },
+    });
+  });
+</script>
+{% endscript %}

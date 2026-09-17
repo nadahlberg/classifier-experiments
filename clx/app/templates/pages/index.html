@@ -1,0 +1,17 @@
+{% extends "layouts/base.html" %}
+
+{% block nav %}<c-nav variant="marketing" />{% endblock %}
+
+{% block content %}
+<section class="relative flex h-[calc(100dvh-var(--spacing-nav))] flex-col items-center justify-center overflow-hidden px-4 text-center">
+  <div class="absolute inset-0 -z-10 bg-[linear-gradient(to_right,color-mix(in_oklab,var(--color-primary)_4%,transparent)_1px,transparent_1px),linear-gradient(to_bottom,color-mix(in_oklab,var(--color-primary)_4%,transparent)_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_70%_70%_at_50%_40%,black,transparent)]"></div>
+  <div class="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_60%_40%_at_50%_0%,color-mix(in_oklab,var(--color-primary)_7%,transparent),transparent)]"></div>
+  <h1 class="max-w-3xl font-display text-5xl font-semibold tracking-tight text-foreground sm:text-7xl">A clean start for your next project</h1>
+  <p class="mt-6 max-w-xl text-lg leading-8 text-muted-foreground">My favorite patterns all wired up, so you can spend day one on the thing you actually set out to build.</p>
+  <div class="mt-10 flex items-center gap-4">
+    <a href="{% url 'demos' %}" class="btn">Get started</a>
+  </div>
+</section>
+{% endblock %}
+
+{% block footer %}<c-footer />{% endblock %}

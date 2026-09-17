@@ -1,0 +1,92 @@
+name: reset-database
+
+# Wipes the production database. Delete this file to remove the capability.
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: Type "reset production database" to confirm
+        required: true
+        type: string
+
+concurrency:
+  group: deploy
+
+permissions:
+  contents: read
+
+jobs:
+  reset:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Require the confirmation phrase
+        env:
+          CONFIRM: ${{ inputs.confirm }}
+        run: |
+          set -euo pipefail
+          if [ "$CONFIRM" != "reset production database" ]; then
+            echo "::error::Type 'reset production database' to confirm."
+            exit 1
+          fi
+
+      - uses: actions/checkout@v7
+
+      - uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_TOKEN }}
+
+      - name: Install the Pulumi CLI
+        run: |
+          set -euo pipefail
+          curl -fsSL https://get.pulumi.com | sh
+          echo "$HOME/.pulumi/bin" >> "$GITHUB_PATH"
+
+      - name: Drop and recreate the public schema
+        env:
+          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          pulumi login
+          cluster=$(pulumi stack output --cwd infra --stack prod cluster_name)
+          doctl kubernetes cluster kubeconfig save "$cluster"
+
+          secrets=$(kubectl get secret -o name)
+          secret=$(printf '%s\n' "$secrets" \
+            | sed -n 's|^secret/\(app-env-[a-z0-9]*\)$|\1|p' | head -1)
+          if [ -z "$secret" ]; then
+            echo "::error::No app-env secret in cluster $cluster."
+            exit 1
+          fi
+
+          overrides=$(cat <<'JSON'
+          {
+            "spec": {
+              "containers": [
+                {
+                  "name": "psql",
+                  "image": "postgres:17",
+                  "envFrom": [{"secretRef": {"name": "APP_ENV_SECRET"}}],
+                  "command": [
+                    "sh", "-c",
+                    "PGPASSWORD=$POSTGRES_PASSWORD psql -h $POSTGRES_HOST -p $POSTGRES_PORT -U $POSTGRES_USER -d $POSTGRES_DB -v ON_ERROR_STOP=on -c 'DROP SCHEMA public CASCADE; CREATE SCHEMA public; GRANT ALL ON SCHEMA public TO CURRENT_USER; GRANT ALL ON SCHEMA public TO public;'"
+                  ]
+                }
+              ]
+            }
+          }
+          JSON
+          )
+
+          echo "Resetting the database behind $secret in $cluster"
+
+          kubectl run "reset-database-$GITHUB_RUN_ID" \
+            --rm --attach --restart=Never \
+            --image=postgres:17 \
+            --overrides="${overrides/APP_ENV_SECRET/$secret}"
+
+          echo "### Database reset" >> "$GITHUB_STEP_SUMMARY"
+          echo "The schema is empty. Deploy to migrate it." \
+            >> "$GITHUB_STEP_SUMMARY"

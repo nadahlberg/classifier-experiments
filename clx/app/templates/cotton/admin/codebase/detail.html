@@ -1,0 +1,97 @@
+<div x-data="codebaseDetail" class="text-sm">
+  <template x-if="$store.codebase.noDetail">
+    <div class="rounded-control border border-dashed border-border px-6 py-14 text-center">
+      <svg class="mx-auto h-8 w-8 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="m16 18 6-6-6-6" />
+        <path d="m8 6-6 6 6 6" />
+      </svg>
+      <p class="mt-3 text-sm font-medium text-foreground">No selection</p>
+      <p class="mt-1 text-xs text-muted-foreground">Select an item to inspect its details, references, and source.</p>
+    </div>
+  </template>
+
+  <template x-if="$store.codebase.hasDetail">
+    <div>
+      <nav x-show="$store.codebase.showCrumbs" class="mb-3 flex flex-wrap items-center gap-1 text-xs text-muted-foreground" aria-label="Recently viewed">
+        <template x-for="(crumb, index) in $store.codebase.crumbs" :key="crumb.id">
+          <span class="flex min-w-0 items-center gap-1">
+            <span x-show="index">›</span>
+            <button type="button" :data-id="crumb.id" @click="select" class="max-w-40 truncate font-mono transition hover:text-foreground" x-text="crumb.name"></button>
+          </span>
+        </template>
+      </nav>
+
+      <p class="break-all font-mono text-sm font-semibold text-foreground" x-text="$store.codebase.detail.name"></p>
+      <div class="mt-2 flex flex-wrap items-center gap-1.5">
+        <span class="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground" x-text="$store.codebase.detail.layerLabel"></span>
+        <span x-show="$store.codebase.detail.groupLabel" class="rounded-full bg-accent px-2 py-0.5 text-[11px] font-medium text-accent-foreground" x-text="$store.codebase.detail.groupLabel"></span>
+      </div>
+
+      <button x-show="$store.codebase.detail.pathLine" type="button" @click="copyPath" title="Copy path" class="mt-2 inline-flex max-w-full items-center gap-1.5 rounded-control border border-border bg-muted px-2 py-1 text-left font-mono text-[11px] text-muted-foreground transition hover:border-border-strong hover:text-foreground">
+        <span class="truncate" x-text="$store.codebase.detail.pathLine"></span>
+        <span x-show="copied" class="shrink-0 font-sans font-medium text-success">Copied</span>
+      </button>
+
+      <p x-show="$store.codebase.detail.signature" class="mt-3 break-all font-mono text-xs leading-5 text-muted-foreground" x-text="$store.codebase.detail.signature"></p>
+      <p x-show="$store.codebase.detail.doc" class="mt-2 whitespace-pre-line text-xs leading-5 text-muted-foreground" x-text="$store.codebase.detail.doc"></p>
+
+      <div x-show="$store.codebase.detail.chips.length" class="mt-3 flex flex-wrap gap-1">
+        <template x-for="chip in $store.codebase.detail.chips" :key="chip.key">
+          <span :class="chip.classes" class="rounded-full px-2 py-0.5 text-[11px] font-medium" x-text="chip.label"></span>
+        </template>
+      </div>
+
+      <dl x-show="$store.codebase.detailRows.length" class="mt-4 space-y-2.5">
+        <template x-for="row in $store.codebase.detailRows" :key="row.key">
+          <div>
+            <dt class="text-[11px] font-medium uppercase tracking-wide text-muted-foreground" x-text="row.key"></dt>
+            <dd class="mt-0.5 break-all font-mono text-xs leading-5 text-foreground" x-text="row.value"></dd>
+          </div>
+        </template>
+      </dl>
+
+      <div x-show="$store.codebase.detailRefs.length" class="mt-4 space-y-3">
+        <template x-for="refGroup in $store.codebase.detailRefs" :key="refGroup.label">
+          <div>
+            <p class="text-[11px] font-medium uppercase tracking-wide text-muted-foreground" x-text="refGroup.label"></p>
+            <div class="mt-1 flex flex-col items-start gap-1">
+              <template x-for="target in refGroup.targets" :key="target.id">
+                <button type="button" :data-id="target.id" @click="select" class="group flex max-w-full items-baseline gap-1.5 text-left">
+                  <span class="truncate font-mono text-xs text-primary group-hover:underline" x-text="target.name"></span>
+                  <span class="shrink-0 text-[11px] text-muted-foreground" x-text="target.layerLabel"></span>
+                </button>
+              </template>
+            </div>
+          </div>
+        </template>
+      </div>
+
+      <div x-show="$store.codebase.detail.source" class="mt-4">
+        <p class="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Source</p>
+        <pre class="mt-1 max-h-96 overflow-auto rounded-control bg-inverse-surface p-3 text-xs leading-5 text-inverse-foreground"><code x-text="$store.codebase.detail.source"></code></pre>
+      </div>
+    </div>
+  </template>
+</div>
+
+{% script %}
+<script>
+  document.addEventListener("alpine:init", () => {
+    Alpine.data("codebaseDetail", () => ({
+      copied: false,
+      copyTimer: null,
+      select(evt) {
+        this.$store.codebase.open(evt.currentTarget.dataset.id);
+      },
+      copyPath() {
+        const detail = this.$store.codebase.detail;
+        if (!detail || !detail.pathLine) return;
+        navigator.clipboard.writeText(detail.pathLine);
+        this.copied = true;
+        clearTimeout(this.copyTimer);
+        this.copyTimer = setTimeout(() => { this.copied = false; }, 1500);
+      },
+    }));
+  });
+</script>
+{% endscript %}

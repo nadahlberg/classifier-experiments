@@ -1,0 +1,49 @@
+<div x-data="importData" data-url="{% url 'demos-docket-import' %}">
+  <button
+    type="button"
+    class="btn w-full gap-2"
+    @click="run"
+    :disabled="importing"
+  >
+    <span x-show="importing" x-cloak><c-spinner size="sm" /></span>
+    <span x-text="label">Import data</span>
+  </button>
+  <p x-show="message" x-cloak class="mt-2 text-xs font-medium leading-5 text-success" x-text="message"></p>
+  <p x-show="error" x-cloak class="mt-2 text-xs leading-5 text-danger" x-text="error"></p>
+</div>
+
+{% script %}
+<script>
+  document.addEventListener("alpine:init", () => {
+    Alpine.data("importData", () => ({
+      url: "",
+      importing: false,
+      message: "",
+      error: "",
+      init() {
+        this.url = this.$el.dataset.url;
+      },
+      get label() {
+        return this.importing ? "Importing…" : "Import data";
+      },
+      async run() {
+        if (this.importing) return;
+        this.importing = true;
+        this.message = "";
+        this.error = "";
+        try {
+          const counts = await api(this.url, { method: "POST" });
+          this.message =
+            `Imported ${counts.dockets.toLocaleString()} dockets, ` +
+            `${counts.entries.toLocaleString()} entries, ` +
+            `${counts.parties.toLocaleString()} parties, and ` +
+            `${counts.attorneys.toLocaleString()} attorneys.`;
+        } catch (error) {
+          this.error = error.message;
+        }
+        this.importing = false;
+      },
+    }));
+  });
+</script>
+{% endscript %}

@@ -1,0 +1,14 @@
+{% extends "layouts/card.html" %}
+
+{% block title %}Verify your email{% endblock %}
+
+{% block card %}
+<div class="card w-full max-w-md text-center">
+  <h1 class="text-2xl font-semibold tracking-tight">Verify your email</h1>
+  <p class="mt-2 text-sm text-muted-foreground">
+    We've sent you a link to finish setting up your account. If it isn't in
+    your inbox, check your spam folder.
+  </p>
+  <a href="{% url 'account_login' %}" class="btn-outline mt-6">Back to sign in</a>
+</div>
+{% endblock %}

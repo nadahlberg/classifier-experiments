@@ -1,0 +1,8 @@
+<div class="rounded-control border border-border bg-muted px-4 py-3">
+  {% if data.location %}
+  <p class="text-xs font-medium uppercase tracking-wide text-muted-foreground">Weather</p>
+  <p class="mt-1 text-sm text-foreground">{{ data.location }} &middot; {{ data.temp_f }}&deg;F</p>
+  {% else %}
+  <p class="text-sm text-muted-foreground">The weather check didn't return a result.</p>
+  {% endif %}
+</div>
