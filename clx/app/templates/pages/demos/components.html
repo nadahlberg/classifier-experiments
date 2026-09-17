@@ -110,7 +110,7 @@ of interface, rendered live.
   <div class="w-full space-y-8">
     <div>
       <p class="text-xs font-medium uppercase tracking-wide text-muted-foreground">font-display</p>
-      <p class="mt-2 font-display text-3xl font-semibold tracking-tight text-foreground">The five boxing wizards jump quickly</p>
+      <p class="mt-2 font-display text-3xl text-foreground">The five boxing wizards jump quickly</p>
     </div>
     <div>
       <p class="text-xs font-medium uppercase tracking-wide text-muted-foreground">font-sans</p>
@@ -303,6 +303,34 @@ of interface, rendered live.
 &lt;c-badge color="info"&gt;Beta&lt;/c-badge&gt;</c-slot>
 </c-components.example>
 
+<h3 id="kbd">Kbd</h3>
+<p>
+  A keyboard key, for shortcut hints beside the action they trigger. Mono at
+  the eyebrow size; pass <code>dark</code> when it sits on an inverse surface,
+  like the footer of a submit button.
+</p>
+<c-components.example>
+  <span class="flex items-center gap-1 text-sm text-muted-foreground">Next item <c-kbd>&#8984;</c-kbd><c-kbd>&#8629;</c-kbd></span>
+  <span class="flex items-center gap-1 text-sm text-muted-foreground">Accept <c-kbd>Tab</c-kbd></span>
+  <span class="flex items-center gap-1 rounded-control bg-inverse-surface px-3 py-2 text-sm text-inverse-foreground">Submit <c-kbd dark>&#8984;</c-kbd><c-kbd dark>&#8629;</c-kbd></span>
+  <c-slot name="code">&lt;c-kbd&gt;Tab&lt;/c-kbd&gt;
+&lt;c-kbd dark&gt;&amp;#8984;&lt;/c-kbd&gt;</c-slot>
+</c-components.example>
+
+<h3 id="eyebrow">Eyebrow</h3>
+<p>
+  The label that sits above a thing: a section of controls, a heading, a
+  table column. Mono, uppercase, letter-spaced, and always muted, so the
+  thing below it carries the weight.
+</p>
+<c-components.example>
+  <div class="flex flex-col gap-1.5">
+    <c-eyebrow>Subject</c-eyebrow>
+    <p class="font-display text-2xl text-foreground">Charged twice after switching plans</p>
+  </div>
+  <c-slot name="code">&lt;c-eyebrow&gt;Subject&lt;/c-eyebrow&gt;</c-slot>
+</c-components.example>
+
 <h3 id="alert">Alert</h3>
 <p>
   An inline callout for things the user should notice without being
@@ -349,6 +377,24 @@ of interface, rendered live.
 &lt;c-spinner /&gt;
 &lt;c-spinner size="lg" /&gt;
 &lt;c-button variant="outline"&gt;&lt;c-spinner size="sm" /&gt; Saving…&lt;/c-button&gt;</c-slot>
+</c-components.example>
+
+<h3 id="progress">Progress</h3>
+<p>
+  A thin determinate bar. <code>value</code> is a percentage; <code>color</code>
+  is an optional CSS color for a per-instance hue, defaulting to primary.
+  Both are set from the component's own script, because the CSP blocks
+  inline <code>style</code> attributes.
+</p>
+<c-components.example>
+  <div class="w-full space-y-4">
+    <c-progress value="68" />
+    <c-progress value="42" color="#1F9A8A" />
+    <c-progress value="89" color="#D9553B" size="sm" />
+  </div>
+  <c-slot name="code">&lt;c-progress value="68" /&gt;
+&lt;c-progress value="42" color="#1F9A8A" /&gt;
+&lt;c-progress value="89" color="#D9553B" size="sm" /&gt;</c-slot>
 </c-components.example>
 
 <h3 id="field">Field</h3>
@@ -448,6 +494,39 @@ Type on the left — **bold**, *italic*,
   </div>
   <c-slot name="code">&lt;c-toggle label="Email notifications" name="notifications" checked /&gt;
 &lt;c-toggle label="Marketing emails" name="marketing" /&gt;</c-slot>
+</c-components.example>
+
+<h3 id="segmented">Segmented</h3>
+<p>
+  A tray of mutually exclusive options. The tray is the accent fill; the
+  active item lifts to the surface. The markup is static: whichever component
+  owns the choice marks the active item and handles the clicks.
+</p>
+<c-components.example>
+  <c-segmented>
+    <c-segmented-item active>All</c-segmented-item>
+    <c-segmented-item>Mine</c-segmented-item>
+    <c-segmented-item>Blocked</c-segmented-item>
+  </c-segmented>
+  <c-slot name="code">&lt;c-segmented&gt;
+  &lt;c-segmented-item active&gt;All&lt;/c-segmented-item&gt;
+  &lt;c-segmented-item&gt;Mine&lt;/c-segmented-item&gt;
+  &lt;c-segmented-item&gt;Blocked&lt;/c-segmented-item&gt;
+&lt;/c-segmented&gt;</c-slot>
+</c-components.example>
+
+<h3 id="segmented_item">Segmented item</h3>
+<p>
+  One option inside a segmented tray. <code>active</code> selects it; extra
+  attributes, like an Alpine <code>@click</code>, land on the button.
+</p>
+<c-components.example>
+  <c-segmented>
+    <c-segmented-item>Negative</c-segmented-item>
+    <c-segmented-item active>Neutral</c-segmented-item>
+    <c-segmented-item>Positive</c-segmented-item>
+  </c-segmented>
+  <c-slot name="code">&lt;c-segmented-item active&gt;Neutral&lt;/c-segmented-item&gt;</c-slot>
 </c-components.example>
 
 <h3 id="tooltip">Tooltip</h3>
