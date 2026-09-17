@@ -37,7 +37,6 @@ admin_view_patterns = [
     ),
     path("settings/", admin.settings, name="admin-settings"),
     path("users/", admin.users, name="admin-users"),
-    path("codebase/", admin.codebase, name="admin-codebase"),
 ]
 
 pwa_patterns = [

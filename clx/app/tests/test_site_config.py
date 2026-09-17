@@ -76,9 +76,9 @@ def test_a_page_title_follows_the_configured_site_name(
 
 def test_busts_cache_exposes_its_keys() -> None:
     """busts_cache stashes the keys it will drop on the wrapper it returns,
-    and the codebase explorer links a service card to the cache keys it
-    busts by reading that attribute instead of parsing the decorator's
-    source. This fails if the stash is dropped or renamed.
+    so tooling can learn which cache keys a service busts by reading that
+    attribute instead of parsing the decorator's source. This fails if the
+    stash is dropped or renamed.
     """
 
     @busts_cache("alpha", "beta")

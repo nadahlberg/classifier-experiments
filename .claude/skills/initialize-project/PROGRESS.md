@@ -38,8 +38,8 @@ secrets outcome (configure).
 - [x] 3. Rename
 - [x] 4. Boot and verify
 - [ ] 5. Strip (one box added per dropped feature)
-  - [ ] chat-demo
-  - [ ] admin-codebase-tab
+  - [x] chat-demo
+  - [x] admin-codebase-tab
   - [ ] layout-demos
 - [ ] 6. Finalize
 - [ ] 7. Configure the repo

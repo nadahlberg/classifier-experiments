@@ -59,9 +59,8 @@ def test_no_page_renders_an_inline_script(client: Client) -> None:
     json_script data blocks pass: CSP governs execution, and a script
     element with a non-JavaScript type is never executed, which is why
     json_script is Django's documented way to hand request-time context
-    to JavaScript under a strict policy. The codebase explorer embeds its
-    inventory that way, so the guard allows inert data blocks while still
-    failing on anything the browser would try to run.
+    to JavaScript under a strict policy, so the guard allows inert data
+    blocks while still failing on anything the browser would try to run.
     """
     patterns = [
         *main_view_patterns,

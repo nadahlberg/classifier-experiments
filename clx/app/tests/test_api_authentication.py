@@ -581,7 +581,7 @@ def test_api_auth_wraps_async_views(
 
 def test_api_auth_exposes_its_config() -> None:
     """api_auth stashes its resolved configuration on the wrapper, beside
-    the existing api_view marker, and the codebase explorer reads an
+    the existing api_view marker, and the pattern checks read an
     endpoint's auth contract off that attribute instead of parsing the
     decorator's source. functools.wraps copies __dict__ outward, so the
     stash must survive csrf_exempt and any require_* decorator wrapped

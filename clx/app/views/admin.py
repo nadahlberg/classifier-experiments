@@ -3,7 +3,6 @@ from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render
 
 from clx.app.permissions import GROUPS, PERMISSIONS
-from clx.app.selectors.codebase import codebase_inventory
 
 
 @permission_required("app.manage_admin")
@@ -33,14 +32,4 @@ def users(request: HttpRequest) -> HttpResponse:
                 for name, codenames in GROUPS.items()
             ],
         },
-    )
-
-
-@permission_required("app.manage_admin")
-def codebase(request: HttpRequest) -> HttpResponse:
-    """Codebase tab of the admin page."""
-    return render(
-        request,
-        "pages/admin/codebase.html",
-        {"inventory": codebase_inventory()},
     )
