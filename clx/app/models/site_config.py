@@ -11,9 +11,7 @@ class SiteConfig(BaseModel):
     id = models.UUIDField(
         primary_key=True, default=SITE_CONFIG_ID, editable=False
     )
-    site_name = models.CharField(
-        max_length=100, default="Classifier Experiments"
-    )
+    site_name = models.CharField(max_length=100, default="clx")
 
     class Meta:
         constraints = [

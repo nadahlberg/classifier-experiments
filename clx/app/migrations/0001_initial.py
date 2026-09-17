@@ -184,7 +184,7 @@ class Migration(migrations.Migration):
                 ('created_at', models.DateTimeField(auto_now_add=True, db_index=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
                 ('id', models.UUIDField(default=uuid.UUID('00000000-0000-0000-0000-000000000000'), editable=False, primary_key=True, serialize=False)),
-                ('site_name', models.CharField(default='Classifier Experiments', max_length=100)),
+                ('site_name', models.CharField(default='CLX', max_length=100)),
             ],
             options={
                 'constraints': [models.CheckConstraint(condition=models.Q(('id', uuid.UUID('00000000-0000-0000-0000-000000000000'))), name='site_config_is_a_singleton')],

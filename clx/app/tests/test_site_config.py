@@ -27,7 +27,7 @@ def test_a_warm_config_cache_costs_no_query(
     site_config_get()
 
     with django_assert_num_queries(0):
-        assert site_config_get().site_name == "Classifier Experiments"
+        assert site_config_get().site_name == "CLX"
 
 
 @pytest.mark.django_db
