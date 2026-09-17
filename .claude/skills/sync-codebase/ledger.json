@@ -1,7 +1,0 @@
-{
-  "repo": "nadahlberg/starter",
-  "base": {"sha": "82dcfbe8ba544171c440c9c76f60ed60cf6965a6", "source": "clone-marker"},
-  "last_refreshed": null,
-  "stripped": ["chat-demo", "admin-codebase-tab", "layout-demos"],
-  "prs": []
-}
