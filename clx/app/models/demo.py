@@ -1,9 +1,6 @@
-import uuid
-
 from django.conf import settings
 from django.core.files.storage import Storage, storages
 from django.db import models
-from django.utils import timezone
 
 from clx.app.models.base import BaseModel
 
@@ -129,49 +126,3 @@ class DemoAttorney(BaseModel):
     name = models.CharField(max_length=200)
     contact = models.TextField(blank=True)
     roles = models.JSONField(default=list, blank=True)
-
-
-class DemoChatThread(BaseModel):
-    class Status(models.TextChoices):
-        IDLE = "idle", "Idle"
-        PENDING = "pending", "Pending"
-        RUNNING = "running", "Running"
-        FAILED = "failed", "Failed"
-
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name="demo_chat_threads",
-    )
-    agent = models.CharField(max_length=50)
-    title = models.CharField(max_length=100, blank=True)
-    status = models.CharField(
-        max_length=20,
-        choices=Status.choices,
-        default=Status.IDLE,
-    )
-    turn = models.UUIDField(default=uuid.uuid4, editable=False)
-    touched_at = models.DateTimeField(default=timezone.now, editable=False)
-    state = models.JSONField(default=dict, blank=True)
-
-
-class DemoChatMessage(BaseModel):
-    class Kind(models.TextChoices):
-        CHAT = "chat", "Chat"
-        META = "meta", "Meta"
-        COMPACTION = "compaction", "Compaction"
-
-    thread = models.ForeignKey(
-        DemoChatThread,
-        on_delete=models.CASCADE,
-        related_name="messages",
-    )
-    kind = models.CharField(
-        max_length=20,
-        choices=Kind.choices,
-        default=Kind.CHAT,
-    )
-    data = models.JSONField(default=dict, blank=True)
-    input_tokens = models.PositiveIntegerField(default=0)
-    output_tokens = models.PositiveIntegerField(default=0)
-    cost = models.FloatField(default=0.0)

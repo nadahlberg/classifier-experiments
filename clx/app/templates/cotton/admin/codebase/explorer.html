@@ -88,8 +88,6 @@
     { value: "task", label: "Task", plural: "Tasks", tier: "Backend" },
     { value: "endpoint", label: "Endpoint", plural: "Endpoints", tier: "Interfaces" },
     { value: "view", label: "View", plural: "Views", tier: "Interfaces" },
-    { value: "agent", label: "Agent", plural: "Agents", tier: "Interfaces" },
-    { value: "agent-tool", label: "Agent tool", plural: "Agent tools", tier: "Interfaces" },
     { value: "mcp-tool", label: "MCP tool", plural: "MCP tools", tier: "Interfaces" },
     { value: "command", label: "Command", plural: "Commands", tier: "Interfaces" },
     { value: "permission", label: "Permission", plural: "Permissions", tier: "Contracts" },
@@ -118,7 +116,7 @@
     default: "bg-accent text-accent-foreground",
   };
 
-  const CODEBASE_GROUP_RANK = { domain: 0, api: 1, pages: 2, agent: 3 };
+  const CODEBASE_GROUP_RANK = { domain: 0, api: 1, pages: 2 };
 
   const CODEBASE_REF_LABELS = {
     calls: ["Calls", "Called by"],

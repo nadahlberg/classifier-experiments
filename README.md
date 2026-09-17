@@ -87,7 +87,6 @@ Set these as repository secrets, under Settings → Secrets and variables → Ac
 | `POSTMARK_SERVER_TOKEN` | Postmark server API token. Set it to send mail through Postmark; leave it unset and mail is printed to the console instead |
 | `DEFAULT_FROM_EMAIL` | Address transactional mail is sent from. Postmark rejects anything that isn't a verified Sender Signature or on a verified domain |
 | `SENTRY_DSN` | Sentry project DSN. Set it to report errors to Sentry; leave it unset and the SDK is never initialised |
-| `OPENAI_API_KEY` | Model access for the chat demo's litellm calls. Set it to let the agent respond; leave it unset and the chat page warns that every response will fail |
 | `DEV_USER_EMAIL` | Set together with `DEV_USER_PASSWORD` to seed an account on migrate. The account is created with its email pre-verified and added to the `Developer` group, so leave both unset anywhere you don't want a standing login |
 | `DEV_USER_PASSWORD` | Password for the seeded account |
 | `AUTODEPLOY` | The one repository **variable** (Variables tab, beside the secrets). Set it to `on` (or `true`/`1`/`yes`) to deploy automatically on every merge to main; leave it unset and the deploy workflow runs only when dispatched by hand from the Actions tab — manual runs ignore the gate |

@@ -174,33 +174,6 @@ def test_inventory_covers_every_registered_mcp_tool(
         assert name in tool_names, name
 
 
-def test_inventory_covers_every_registered_agent_and_tool(
-    inventory: Inventory,
-) -> None:
-    """Every registered chat agent has a card, and each of its tools too.
-
-    The deferred import mirrors the builder's own ImportError guard: the
-    chat-demo uninstall deletes clx/app/agents entirely, and the
-    explorer must keep working without it. While the package exists,
-    every AGENTS entry and every tool on it must surface — an agent
-    registered by __init_subclass__ that never shows up here means the
-    builder drifted from the registry it claims to render.
-    """
-    agents = pytest.importorskip("clx.app.agents")
-
-    agent_names = {
-        card["name"] for card in inventory if card["layer"] == "agent"
-    }
-    tool_names = {
-        card["name"] for card in inventory if card["layer"] == "agent-tool"
-    }
-    assert agents.AGENTS
-    for name, agent_class in agents.AGENTS.items():
-        assert name in agent_names, name
-        for tool in agent_class.tools:
-            assert tool.name in tool_names, tool.name
-
-
 def test_inventory_covers_every_cotton_component(
     inventory: Inventory,
 ) -> None:

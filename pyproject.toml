@@ -27,7 +27,6 @@ dependencies = [
   "elasticsearch>=9,<10",
   "fastmcp>=3.4,<4",
   "jsonschema>=4.26",
-  "litellm>=1.97",
   "pre-commit>=4.3.0",
   "psycopg[binary]>=3.3.4",
   "redis>=6,<6.5",
@@ -107,7 +106,6 @@ strict = true
 module = [
   "allauth.*",
   "django_ratelimit.*",
-  "litellm.*",
   "oauth2_provider.*",
 ]
 ignore_missing_imports = true

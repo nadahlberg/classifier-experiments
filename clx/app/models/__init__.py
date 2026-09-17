@@ -2,8 +2,6 @@ from clx.app.models.api_token import TOKEN_PREFIX, ApiToken
 from clx.app.models.base import BaseModel
 from clx.app.models.demo import (
     DemoAttorney,
-    DemoChatMessage,
-    DemoChatThread,
     DemoDocket,
     DemoDocketEntry,
     DemoJob,
@@ -19,8 +17,6 @@ __all__ = [
     "ApiToken",
     "BaseModel",
     "DemoAttorney",
-    "DemoChatMessage",
-    "DemoChatThread",
     "DemoDocket",
     "DemoDocketEntry",
     "DemoJob",

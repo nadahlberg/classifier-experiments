@@ -33,7 +33,6 @@ QUERYSET_WRITE_METHODS = {"update", "delete"}
 
 READ_LAYERS = (
     "clx.app.selectors",
-    "clx.app.agents",
     "clx.app.api",
     "clx.app.views",
     "clx.app.tasks",

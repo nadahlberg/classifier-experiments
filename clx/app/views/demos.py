@@ -78,16 +78,6 @@ def search(request: HttpRequest) -> HttpResponse:
 
 
 @login_required
-def chat(request: HttpRequest) -> HttpResponse:
-    """Chat demo page."""
-    return render(
-        request,
-        "pages/demos/chat.html",
-        {"configured": bool(settings.OPENAI_API_KEY)},
-    )
-
-
-@login_required
 def dashboard(request: HttpRequest) -> HttpResponse:
     """Dashboard demo page."""
     return render(request, "pages/demos/dashboard.html")

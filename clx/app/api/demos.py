@@ -1,18 +1,11 @@
-import json
 import uuid
-from collections.abc import AsyncGenerator
 from typing import Any, cast
 
-import redis.asyncio
-from asgiref.sync import sync_to_async
-from django.conf import settings
-from django.db import connections
 from django.http import (
     FileResponse,
     Http404,
     HttpRequest,
     JsonResponse,
-    StreamingHttpResponse,
 )
 from django.utils.formats import date_format
 from django.utils.text import Truncator
@@ -36,10 +29,8 @@ from clx.app.api.utils import (
     parse_float,
     parse_int,
 )
-from clx.app.cache import demo_chat_events_channel
 from clx.app.exceptions import ApplicationError
 from clx.app.models import (
-    DemoChatThread,
     DemoDocket,
     DemoJob,
     DemoUpload,
@@ -49,9 +40,6 @@ from clx.app.permissions import MANAGE_ADMIN, MANAGE_DEVELOPER
 from clx.app.selectors.demo import (
     DEMO_DOCKET_SEARCH_LIMIT,
     DEMO_DOCKET_SORTS,
-    demo_chat_thread_get,
-    demo_chat_thread_list,
-    demo_chat_thread_snapshot,
     demo_docket_facet_options,
     demo_docket_search,
     demo_heartbeat_read,
@@ -60,10 +48,6 @@ from clx.app.selectors.demo import (
     demo_upload_list,
 )
 from clx.app.services.demo import (
-    demo_chat_message_send,
-    demo_chat_thread_delete,
-    demo_chat_thread_rename,
-    demo_chat_turn_cancel,
     demo_docket_import,
     demo_job_cancel,
     demo_job_delete,
@@ -411,135 +395,3 @@ def auth_burst(request: HttpRequest) -> JsonResponse:
         request, f"{AUTH_BURST_LIMIT} per {AUTH_BURST_WINDOW_SECONDS}s."
     )
     return JsonResponse(payload)
-
-
-CHAT_SEND_RATE_LIMIT = 20
-CHAT_SEND_RATE_WINDOW_SECONDS = 60
-CHAT_PING_INTERVAL_SECONDS = 15.0
-
-
-@require_GET
-@api_auth(SESSION)
-def chat_thread_list(request: HttpRequest) -> JsonResponse:
-    """List the caller's chat threads, most recently active first."""
-    threads = demo_chat_thread_list(user=cast("User", request.user))
-    return JsonResponse({"threads": [_thread(thread) for thread in threads]})
-
-
-@require_POST
-@api_auth(SESSION, rate=(CHAT_SEND_RATE_LIMIT, CHAT_SEND_RATE_WINDOW_SECONDS))
-def chat_message_send(request: HttpRequest) -> JsonResponse:
-    """Send a message, creating the thread when none is given."""
-    body = parse_body(request)
-    thread = demo_chat_message_send(
-        user=cast("User", request.user),
-        message=str(body.get("message", "")),
-        agent=str(body.get("agent", "")),
-        thread_id=str(body["thread_id"]) if body.get("thread_id") else None,
-    )
-    return JsonResponse(_thread(thread), status=201)
-
-
-@require_GET
-@api_auth(SESSION)
-async def chat_thread_events(
-    request: HttpRequest, thread_id: uuid.UUID
-) -> StreamingHttpResponse:
-    """Stream a thread's snapshot and then its live events over SSE."""
-    thread = await sync_to_async(demo_chat_thread_get)(
-        user=cast("User", request.user), thread_id=str(thread_id)
-    )
-    if thread is None:
-        raise Http404
-    response = StreamingHttpResponse(
-        _event_stream(str(thread.id)), content_type="text/event-stream"
-    )
-    response["Cache-Control"] = "no-cache"
-    response["X-Accel-Buffering"] = "no"
-    return response
-
-
-@require_POST
-@api_auth(SESSION)
-def chat_turn_cancel(
-    request: HttpRequest, thread_id: uuid.UUID
-) -> JsonResponse:
-    """Cancel the response currently streaming on a thread."""
-    demo_chat_turn_cancel(
-        user=cast("User", request.user), thread_id=str(thread_id)
-    )
-    return JsonResponse({"cancelled": True})
-
-
-@require_POST
-@api_auth(SESSION)
-def chat_thread_rename(
-    request: HttpRequest, thread_id: uuid.UUID
-) -> JsonResponse:
-    """Rename one of the caller's chat threads."""
-    body = parse_body(request)
-    thread = demo_chat_thread_rename(
-        user=cast("User", request.user),
-        thread_id=str(thread_id),
-        title=str(body.get("title", "")),
-    )
-    return JsonResponse(_thread(thread))
-
-
-@require_http_methods(["DELETE"])
-@api_auth(SESSION)
-def chat_thread_delete(
-    request: HttpRequest, thread_id: uuid.UUID
-) -> JsonResponse:
-    """Delete one of the caller's chat threads and its messages."""
-    demo_chat_thread_delete(
-        user=cast("User", request.user), thread_id=str(thread_id)
-    )
-    return JsonResponse({"deleted": True})
-
-
-def _thread(thread: DemoChatThread) -> dict[str, Any]:
-    return {
-        "id": str(thread.id),
-        "title": thread.title,
-        "status": thread.status,
-        "updated_at": thread.updated_at.isoformat(),
-    }
-
-
-async def _event_stream(thread_id: str) -> AsyncGenerator[str]:
-    """Subscribe first, snapshot second, so no event can slip between."""
-    client = redis.asyncio.Redis.from_url(settings.REDIS_URL)
-    pubsub = client.pubsub()
-    try:
-        await pubsub.subscribe(demo_chat_events_channel(thread_id))
-        snapshot = await sync_to_async(_snapshot)(thread_id)
-        if snapshot is None:
-            return
-        yield _sse({"type": "snapshot", **snapshot})
-        while True:
-            message = await pubsub.get_message(
-                ignore_subscribe_messages=True,
-                timeout=CHAT_PING_INTERVAL_SECONDS,
-            )
-            if message is None:
-                yield ": ping\n\n"
-                continue
-            yield f"data: {message['data'].decode()}\n\n"
-    finally:
-        await pubsub.aclose()
-        await client.aclose()
-
-
-def _snapshot(thread_id: str) -> dict[str, Any] | None:
-    try:
-        thread = DemoChatThread.objects.filter(id=thread_id).first()
-        if thread is None:
-            return None
-        return demo_chat_thread_snapshot(thread=thread)
-    finally:
-        connections.close_all()
-
-
-def _sse(payload: dict[str, Any]) -> str:
-    return f"data: {json.dumps(payload)}\n\n"

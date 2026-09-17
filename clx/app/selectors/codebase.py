@@ -626,7 +626,6 @@ class _Inventory:
         self.build_beat_entries()
         self.build_functions()
         self.build_urls()
-        self.build_agents()
         self.build_mcp_tools()
         self.build_commands()
         self.build_wiring()
@@ -1250,73 +1249,6 @@ class _Inventory:
             details=details,
             refs=refs,
         )
-
-    def build_agents(self) -> None:
-        """One card per registered chat agent, and one per tool beside it."""
-        try:
-            registry: dict[str, Any] = import_module("clx.app.agents").AGENTS
-        except ImportError:
-            return
-        for name in sorted(registry):
-            cls = registry[name]
-            module = import_module(cls.__module__)
-            info = self.module(module.__file__)
-            node = info.classes.get(cls.__name__)
-            if node is None:
-                continue
-            refs = []
-            details: dict[str, str] = {}
-            if cls.state_template:
-                details["state template"] = cls.state_template
-                target = self.template_ids.get(cls.state_template)
-                if target:
-                    refs.append(_ref("renders", target))
-            card = self.add(
-                "agent",
-                name,
-                path=info.rel,
-                line=node.lineno,
-                doc=ast.get_docstring(node),
-                chips=[_chip("model", cls.model)],
-                details=details,
-                refs=refs,
-                source=_segment(info, node),
-            )
-            self._resolvable.append((card, cls.__module__, cls.__name__))
-            for tool in cls.tools:
-                self.build_agent_tool(name, tool)
-
-    def build_agent_tool(self, agent_name: str, tool: Any) -> None:
-        """One card per agent tool; the docstring is the prompt the model reads."""
-        module = import_module(tool.__module__)
-        info = self.module(module.__file__)
-        node = info.classes.get(tool.__name__)
-        if node is None:
-            return
-        schema = tool.get_schema()["function"]["parameters"]
-        refs = []
-        details = {"input schema": json.dumps(schema)}
-        for label, template in (
-            ("call template", tool.tool_call_template),
-            ("result template", tool.tool_result_template),
-        ):
-            if isinstance(template, str):
-                details[label] = template
-                target = self.template_ids.get(template)
-                if target:
-                    refs.append(_ref("renders", target))
-        card = self.add(
-            "agent-tool",
-            tool.name,
-            path=info.rel,
-            line=node.lineno,
-            group={"kind": "agent", "name": agent_name},
-            doc=ast.get_docstring(node),
-            details=details,
-            refs=refs,
-            source=_segment(info, node),
-        )
-        self._resolvable.append((card, tool.__module__, tool.__name__))
 
     def build_mcp_tools(self) -> None:
         """One card per registered MCP tool, schema and annotations included."""

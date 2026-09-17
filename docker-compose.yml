@@ -35,7 +35,6 @@ services:
       ELASTICSEARCH_URL: http://elasticsearch:9200
       SECRET_KEY: ${SECRET_KEY:-dev}
       SENTRY_DSN: ${SENTRY_DSN:-}
-      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       DEV_USER_EMAIL: ${DEV_USER_EMAIL:-dev@example.com}
       DEV_USER_PASSWORD: ${DEV_USER_PASSWORD:-dev}
     volumes:
@@ -93,7 +92,6 @@ services:
       POSTGRES_PASSWORD: postgres
       REDIS_URL: redis://redis:6379
       ELASTICSEARCH_URL: http://elasticsearch:9200
-      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
     volumes:
       - .:/app
     depends_on:

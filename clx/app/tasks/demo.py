@@ -15,13 +15,3 @@ def demo_job_execute_task(job_id: str) -> None:
 @app.task
 def demo_docket_reindex_task() -> None:
     demo_service.demo_docket_reindex()
-
-
-@app.task
-def demo_chat_turn_run_task(thread_id: str) -> None:
-    demo_service.demo_chat_turn_run(thread_id)
-
-
-@app.task
-def demo_chat_thread_title_generate_task(thread_id: str) -> None:
-    demo_service.demo_chat_thread_title_generate(thread_id)

@@ -70,7 +70,6 @@ clx/
     api/                 JSON API layer (thin), one module per surface
       utils/             the API's shared machinery, one module per concern
     tasks/               Celery task layer (thin), grouped by domain
-    agents/              chat agent framework + one module per agent
     management/          management commands (thin), one module per command
     templatetags/        template tags; registered as builtins in settings
     views/               HTML view layer (thin), grouped by domain
@@ -210,36 +209,6 @@ off the same image as the web process.
   (`clx.app.tasks.demo.demo_heartbeat_task`). Beat resolves that name at
   send time, not startup, so a stale entry fails silently — `test_tasks.py`
   guards against it.
-
-## Agents
-
-The chat engine's pluggable half. `agents/base.py` holds the framework —
-`Agent`, `Tool`, `ToolOutput`, `AgentState`, the `AGENTS` registry — and
-each agent is one module carrying its agent class, state model, and tools
-(`demo.py` is the worked example). Split a shared `tools/` module out
-only when a tool is actually used by more than one agent.
-
-- Agents and tools register at import via `__init_subclass__`, and
-  `agents/__init__.py` imports each agent module by name — a module it does
-  not import silently does not exist, the same failure mode as MCP tool
-  modules and celery tasks.
-- **Agent and tool docstrings are prompts**, like MCP tool docstrings: the
-  tool docstring is the description the model reads when deciding to call
-  it, registration raises without one, and they are exempt from the
-  one-line rule.
-- **A tool is an interface**, like an endpoint or an MCP tool: it may fetch
-  objects, but writes go through a service — `check_weather` reads the
-  thread and hands its new state to `demo_chat_thread_state_update`. Tools
-  receive `thread_id`, never objects, and run synchronously inside the
-  celery worker.
-- Rendering is declared, not coded: `tool_call_template`,
-  `tool_result_template`, and `state_template` name templates under
-  `cotton/demos/chat/`, server-rendered and shipped to the page in events;
-  `None`
-  falls back to a generic card, so a new agent needs no frontend work.
-- The turn engine lives in `services/demo.py`. Agents and tools never
-  publish events or touch the stream — they compute and return, and the
-  runner persists, publishes, and loops.
 
 ## Caching
 

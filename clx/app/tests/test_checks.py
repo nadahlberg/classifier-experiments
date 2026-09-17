@@ -459,12 +459,10 @@ PATTERN_CASES = [
             [_template_fact("cotton/orphan.html")], frozenset(), log
         ),
         # A component is used when a template carries its tag OR when a
-        # Python string literal names it — declared rendering (an agent's
-        # tool_call_template, a render_to_string call) is rendering, so a
-        # template only Python knows about is not dead markup. The chat
-        # demo's tool cards are the live example: nothing renders
-        # <c-demos.chat.tools.check-weather-call />, yet the template is
-        # served to the page in every tool-call event.
+        # Python string literal names it — declared rendering (a
+        # render_to_string call, a template path stored on a class) is
+        # rendering, so a template only Python knows about is not dead
+        # markup.
         lambda log: templates.check_components_are_used(
             [
                 _template_fact("cotton/button.html"),

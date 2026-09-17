@@ -27,7 +27,6 @@ demos_view_patterns = [
     path("dashboard/", demos.dashboard, name="demos-dashboard"),
     path("api/", demos.api, name="demos-api"),
     path("search/", demos.search, name="demos-search"),
-    path("chat/", demos.chat, name="demos-chat"),
 ]
 
 admin_view_patterns = [
@@ -162,36 +161,6 @@ demos_api_patterns = [
         name="demos-auth-developer",
     ),
     path("auth/burst/", demos_api.auth_burst, name="demos-auth-burst"),
-    path(
-        "chat/threads/",
-        demos_api.chat_thread_list,
-        name="demos-chat-threads",
-    ),
-    path(
-        "chat/threads/send/",
-        demos_api.chat_message_send,
-        name="demos-chat-send",
-    ),
-    path(
-        "chat/threads/<uuid:thread_id>/events/",
-        demos_api.chat_thread_events,
-        name="demos-chat-thread-events",
-    ),
-    path(
-        "chat/threads/<uuid:thread_id>/cancel/",
-        demos_api.chat_turn_cancel,
-        name="demos-chat-thread-cancel",
-    ),
-    path(
-        "chat/threads/<uuid:thread_id>/rename/",
-        demos_api.chat_thread_rename,
-        name="demos-chat-thread-rename",
-    ),
-    path(
-        "chat/threads/<uuid:thread_id>/",
-        demos_api.chat_thread_delete,
-        name="demos-chat-thread-delete",
-    ),
 ]
 
 tokens_api_patterns = [

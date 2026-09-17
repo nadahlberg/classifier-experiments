@@ -10,7 +10,6 @@ DECLARED_APP_MODULES = {
     "selectors",
     "services",
     "tasks",
-    "agents",
     "api",
     "views",
     "management",
@@ -34,7 +33,6 @@ LAYER_PACKAGES = {
     "selectors": "clx.app.selectors",
     "services": "clx.app.services",
     "tasks": "clx.app.tasks",
-    "agents": "clx.app.agents",
     "api": "clx.app.api",
     "views": "clx.app.views",
     "management": "clx.app.management",
@@ -43,10 +41,9 @@ LAYER_PACKAGES = {
 
 ALLOWED_IMPORTS = {
     "models": {"models"},
-    "selectors": {"models", "selectors", "agents"},
-    "services": {"models", "selectors", "services", "tasks", "agents"},
+    "selectors": {"models", "selectors"},
+    "services": {"models", "selectors", "services", "tasks"},
     "tasks": {"models", "selectors", "services", "tasks"},
-    "agents": {"models", "selectors", "services", "agents"},
     "api": {"models", "selectors", "services", "api"},
     "views": {"models", "selectors", "services", "views"},
     "management": {"models", "selectors", "services", "management"},
