@@ -37,10 +37,10 @@ secrets outcome (configure).
 - [x] 2. Prerequisites
 - [x] 3. Rename
 - [x] 4. Boot and verify
-- [ ] 5. Strip (one box added per dropped feature)
+- [x] 5. Strip (one box added per dropped feature)
   - [x] chat-demo
   - [x] admin-codebase-tab
-  - [ ] layout-demos
+  - [x] layout-demos
 - [ ] 6. Finalize
 - [ ] 7. Configure the repo
 - [ ] 8. Publish

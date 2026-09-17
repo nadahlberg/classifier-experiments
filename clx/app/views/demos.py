@@ -16,24 +16,6 @@ def index(request: HttpRequest) -> HttpResponse:
 
 
 @login_required
-def card(request: HttpRequest) -> HttpResponse:
-    """Card layout demo page."""
-    return render(request, "pages/demos/card.html")
-
-
-@login_required
-def card_grid(request: HttpRequest) -> HttpResponse:
-    """Card grid layout demo page."""
-    return render(request, "pages/demos/card_grid.html")
-
-
-@login_required
-def content(request: HttpRequest) -> HttpResponse:
-    """Content layout demo page."""
-    return render(request, "pages/demos/content.html")
-
-
-@login_required
 def celery(request: HttpRequest) -> HttpResponse:
     """Celery demo page."""
     schedule = cast(
@@ -75,12 +57,6 @@ def components(request: HttpRequest) -> HttpResponse:
 def search(request: HttpRequest) -> HttpResponse:
     """Search demo page."""
     return render(request, "pages/demos/search.html")
-
-
-@login_required
-def dashboard(request: HttpRequest) -> HttpResponse:
-    """Dashboard demo page."""
-    return render(request, "pages/demos/dashboard.html")
 
 
 @login_required

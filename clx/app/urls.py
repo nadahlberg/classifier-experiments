@@ -17,14 +17,10 @@ main_view_patterns = [
 
 demos_view_patterns = [
     path("", demos.index, name="demos"),
-    path("card/", demos.card, name="demos-card"),
     path("celery/", demos.celery, name="demos-celery"),
     path("uploads/", demos.uploads, name="demos-uploads"),
-    path("card-grid/", demos.card_grid, name="demos-card-grid"),
-    path("content/", demos.content, name="demos-content"),
     path("markdown/", demos.markdown, name="demos-markdown"),
     path("components/", demos.components, name="demos-components"),
-    path("dashboard/", demos.dashboard, name="demos-dashboard"),
     path("api/", demos.api, name="demos-api"),
     path("search/", demos.search, name="demos-search"),
 ]
